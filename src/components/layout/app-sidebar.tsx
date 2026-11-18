@@ -22,6 +22,7 @@ import {
   GraduationCap,
   Layers,
   LayoutDashboard,
+  Library,
   LogOut,
   Settings,
   Tags,
@@ -51,6 +52,10 @@ export const navGroups: { label: string; items: NavItem[] }[] = [
       { title: "Chapters", url: "/curriculum/chapters", icon: BookMarked },
       { title: "Topics", url: "/curriculum/topics", icon: Tags },
     ],
+  },
+  {
+    label: "Content",
+    items: [{ title: "Question bank", url: "/question-bank", icon: Library }],
   },
   {
     label: "More",

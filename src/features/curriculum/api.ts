@@ -6,6 +6,7 @@ import type {
   ChapterBody,
   EducationLevelBody,
   SubjectBody,
+  Topic,
   TopicBody,
 } from "./types";
 import type { Page } from "@/types/api";
@@ -43,7 +44,12 @@ export const educationLevelsApi = writes<EducationLevelBody>(EDUCATION_LEVELS);
 export const academicGroupsApi = writes<AcademicGroupBody>(ACADEMIC_GROUPS);
 export const batchesApi = writes<BatchBody>(BATCHES);
 export const subjectsApi = writes<SubjectBody>(SUBJECTS);
-export const topicsApi = writes<TopicBody>(TOPICS);
+export const topicsApi = {
+  ...writes<TopicBody>(TOPICS),
+  /** Every topic of one chapter, for the question editor's topic picker. */
+  byChapter: async (chapter: number) =>
+    (await api.get<Page<Topic>>(TOPICS, { params: { chapter, page_size: 200 } })).data.results,
+};
 export const chaptersApi = {
   ...writes<ChapterBody>(CHAPTERS),
   /** Every chapter of one subject, for the topic form's chapter picker. */

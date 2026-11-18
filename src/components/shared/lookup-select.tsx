@@ -11,7 +11,7 @@ interface LookupSelectProps {
   /** The chosen row's id as a string; `""` is nothing chosen. */
   value: string;
   onChange: (value: string) => void;
-  options: { id: number; name: string }[] | undefined;
+  options: { id: number | string; name: string }[] | undefined;
   placeholder: string;
   /** Adds a first option that clears the choice, e.g. "All subjects" on a filter. */
   allLabel?: string;
@@ -19,7 +19,7 @@ interface LookupSelectProps {
   className?: string;
 }
 
-/** A dropdown over rows from `lib/lookups.ts`, used both as a toolbar filter and as a form field. */
+/** A dropdown over rows from `lib/lookups.ts` or a fixed option list, used both as a toolbar filter and as a form field. */
 export function LookupSelect({
   id,
   ariaLabel,
