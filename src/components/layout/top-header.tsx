@@ -37,14 +37,21 @@ function ThemeToggle() {
 /** Every destination the sidebar offers, for resolving a bare first crumb. */
 const NAV_URLS: string[] = navGroups.flatMap((g) => g.items.map((i) => i.url));
 
-/** Path segments whose crumb should not simply be the segment with its dashes removed. */
-const TITLES: Record<string, string> = {
-  dashboard: "Dashboard",
-  settings: "Settings",
-  "otp-log": "OTP log",
+/** A page's crumb is its sidebar name, so `/billing/products` reads "Plans" as it does there. */
+const NAV_TITLES: Record<string, string> = Object.fromEntries(
+  navGroups.flatMap((g) => g.items.map((i) => [i.url, i.title])),
+);
+
+/** Path words that are not pages of their own; anything else unknown (a mistyped id) gets no crumb. */
+const WORDS: Record<string, string> = {
+  billing: "Billing",
+  curriculum: "Curriculum",
+  new: "New",
+  edit: "Edit",
+  apple: "App Store",
 };
 
-/** Breadcrumb from the path, with numeric ids dropped. */
+/** Breadcrumb from the path, with ids dropped. */
 function useCrumbs() {
   const pathname = usePathname();
   const segments = pathname.split("/").filter(Boolean);
@@ -52,8 +59,8 @@ function useCrumbs() {
   // A bare first segment resolves to the sidebar's URL; anything else stays unlinked.
   const crumbs: { label: string; href: string | null }[] = [];
   segments.forEach((seg, i) => {
-    if (/^\d+$/.test(seg)) return;
-    const label = TITLES[seg] ?? seg.replace(/-/g, " ");
+    const label = NAV_TITLES["/" + segments.slice(0, i + 1).join("/")] ?? WORDS[seg];
+    if (!label) return;
     if (crumbs.length && crumbs[crumbs.length - 1].label === label) return;
 
     const path = "/" + segments.slice(0, i + 1).join("/");
@@ -124,8 +131,8 @@ export function TopHeader({ onLogout }: { onLogout: () => void }) {
                   aria-current={last ? "page" : undefined}
                   className={
                     last
-                      ? "truncate text-sm font-medium text-foreground capitalize"
-                      : "truncate text-sm text-muted-foreground capitalize"
+                      ? "truncate text-sm font-medium text-foreground"
+                      : "truncate text-sm text-muted-foreground"
                   }
                 >
                   {c.label}
@@ -133,7 +140,7 @@ export function TopHeader({ onLogout }: { onLogout: () => void }) {
               ) : (
                 <Link
                   href={c.href}
-                  className="truncate rounded-(--shape-xs) px-1 py-0.5 text-sm text-muted-foreground capitalize transition-colors duration-(--duration-short) hover:bg-accent hover:text-foreground"
+                  className="truncate rounded-(--shape-xs) px-1 py-0.5 text-sm text-muted-foreground transition-colors duration-(--duration-short) hover:bg-accent hover:text-foreground"
                 >
                   {c.label}
                 </Link>
