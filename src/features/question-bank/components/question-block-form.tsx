@@ -53,11 +53,14 @@ export function QuestionBlockForm({
   block,
   defaults = { subject: "", chapter: "" },
   cancelHref,
+  onSaved,
 }: {
   block: QuestionBlock | null;
   /** Where a new question starts, e.g. the subject and chapter the list was filtered to. */
   defaults?: { subject: string; chapter: string };
   cancelHref: string;
+  /** Runs after a save in place of opening the question's page, e.g. back to the report being fixed. */
+  onSaved?: (saved: QuestionBlock) => Promise<void> | void;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -89,7 +92,7 @@ export function QuestionBlockForm({
   const save = useMutation({
     mutationFn: () =>
       isEdit ? questionBlocksApi.update(block!.id, toBody(draft)) : questionBlocksApi.create(toBody(draft)),
-    onSuccess: (saved) => {
+    onSuccess: async (saved) => {
       // The question's page reads this entry; set first, so it shows the saved version straight away.
       queryClient.setQueryData([...questionBlockKeys.all, "detail", saved.id], saved);
       queryClient.invalidateQueries({ queryKey: questionBlockKeys.all });
@@ -98,6 +101,7 @@ export function QuestionBlockForm({
         queryClient.invalidateQueries({ queryKey: curriculumKeys[key].all });
       }
       toast.success(isEdit ? "Question updated" : "Question added");
+      if (onSaved) return onSaved(saved);
       // Replace, not push: Back from the saved record must not reopen the form it was saved from.
       router.replace(`/question-bank/${saved.id}`);
     },

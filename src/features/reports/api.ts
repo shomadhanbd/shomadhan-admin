@@ -9,5 +9,6 @@ export const reportKeys = {
 };
 
 export const reportsApi = {
+  get: async (id: number) => (await api.get<Report>(`${REPORTS}${id}/`)).data,
   setStatus: async (id: number, status: ReportStatus) => (await api.patch<Report>(`${REPORTS}${id}/`, { status })).data,
 };

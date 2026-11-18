@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, Flag, Pencil, RotateCcw, Trash2, X } from "lucide-react";
@@ -65,7 +66,9 @@ export function ReportsPage() {
       header: "Question",
       cell: (r) => (
         <div className="max-w-sm min-w-0">
-          <RichContent content={plainText(r.question_prompt)} className="truncate font-medium" />
+          <Link href={`/question-bank/${r.block}`} className="block hover:text-primary">
+            <RichContent content={plainText(r.question_prompt)} className="truncate font-medium" />
+          </Link>
           <p className="truncate text-xs text-muted-foreground">
             {r.block_slug} · {QUESTION_TYPE_LABELS[r.question_type]}
           </p>
@@ -79,7 +82,9 @@ export function ReportsPage() {
       width: "170px",
       cell: (r) => (
         <div className="min-w-0">
-          <p className="truncate text-sm text-foreground">{r.user_name || r.user_mobile || "—"}</p>
+          <Link href={`/users/${r.user}`} className="block truncate text-sm text-foreground hover:text-primary">
+            {r.user_name || r.user_mobile || "—"}
+          </Link>
           <p className="truncate text-xs text-muted-foreground">{date(r.created_at)}</p>
         </div>
       ),
@@ -111,7 +116,7 @@ export function ReportsPage() {
                 {
                   icon: <Pencil className="h-4 w-4" />,
                   label: `Fix question ${r.block_slug}`,
-                  onClick: () => router.push(`/question-bank/${r.block}/edit`),
+                  onClick: () => router.push(`/question-bank/${r.block}/edit?report=${r.id}`),
                 },
                 ...(r.status === "open"
                   ? [
