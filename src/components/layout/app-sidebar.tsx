@@ -28,6 +28,7 @@ import {
   LogOut,
   Settings,
   Tags,
+  Users,
   Users2,
 } from "lucide-react";
 
@@ -53,6 +54,10 @@ export const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "Exams",
     items: [{ title: "Mock tests", url: "/mock-tests", icon: ClipboardList }],
+  },
+  {
+    label: "People",
+    items: [{ title: "Users", url: "/users", icon: Users }],
   },
   {
     // Below the daily work: the curriculum is set up once and rarely changes.

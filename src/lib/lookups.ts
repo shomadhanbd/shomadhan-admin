@@ -16,6 +16,11 @@ export interface AcademicGroupLookup extends Lookup {
   education_level: number;
 }
 
+/** A batch belongs to one education level. */
+export interface BatchLookup extends Lookup {
+  education_level: number;
+}
+
 export interface SubjectLookup extends Lookup {
   education_level: number;
   academic_group: number;
@@ -38,4 +43,5 @@ function useLookup<T extends Lookup>(resource: string, { retirable = false, incl
 export const useEducationLevels = () => useLookup<Lookup>("education-levels");
 export const useAcademicGroups = () => useLookup<AcademicGroupLookup>("academic-groups");
 export const useSubjects = () => useLookup<SubjectLookup>("subjects");
-export const useBatches = (includeRetired = false) => useLookup<Lookup>("batches", { retirable: true, includeRetired });
+export const useBatches = (includeRetired = false) =>
+  useLookup<BatchLookup>("batches", { retirable: true, includeRetired });
