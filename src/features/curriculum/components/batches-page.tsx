@@ -112,7 +112,7 @@ export function BatchesPage() {
     });
 
   const columns: Column<Batch>[] = [
-    { key: "name", header: "Batch", cell: (b) => <NameCell name={b.name} slug={b.slug} /> },
+    { key: "name", header: "Batch", cell: (b) => <NameCell name={b.name} /> },
     {
       key: "level",
       header: "Level",

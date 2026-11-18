@@ -91,7 +91,7 @@ export function EducationLevelsPage() {
     });
 
   const columns: Column<EducationLevel>[] = [
-    { key: "name", header: "Level", cell: (l) => <NameCell name={l.name} slug={l.slug} /> },
+    { key: "name", header: "Level", cell: (l) => <NameCell name={l.name} /> },
     countColumn("groups", "Groups", (l) => l.group_count),
     countColumn("subjects", "Subjects", (l) => l.subject_count),
     countColumn("chapters", "Chapters", (l) => l.chapter_count),

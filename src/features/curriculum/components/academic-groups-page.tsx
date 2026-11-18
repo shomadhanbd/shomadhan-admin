@@ -120,7 +120,7 @@ export function AcademicGroupsPage() {
     });
 
   const columns: Column<AcademicGroup>[] = [
-    { key: "name", header: "Group", cell: (g) => <NameCell name={g.name} slug={g.slug} /> },
+    { key: "name", header: "Group", cell: (g) => <NameCell name={g.name} /> },
     {
       key: "level",
       header: "Level",

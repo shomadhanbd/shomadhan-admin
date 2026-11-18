@@ -146,7 +146,7 @@ export function SubjectsPage() {
     });
 
   const columns: Column<Subject>[] = [
-    { key: "name", header: "Subject", cell: (s) => <NameCell name={s.name} slug={s.slug} /> },
+    { key: "name", header: "Subject", cell: (s) => <NameCell name={s.name} /> },
     {
       key: "level",
       header: "Level",

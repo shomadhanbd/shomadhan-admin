@@ -6,14 +6,11 @@ import { Field } from "@/components/shared/page-shell";
 import { RowActions } from "@/components/shared/row-actions";
 import type { Column } from "@/components/shared/data-table";
 
-/** The identity cell every curriculum table starts with: the name over its slug. */
-export function NameCell({ name, slug }: { name: string; slug: string }) {
-  return (
-    <div className="min-w-0">
-      <p className="truncate font-medium text-foreground">{name}</p>
-      <p className="truncate text-xs text-muted-foreground">{slug}</p>
-    </div>
-  );
+/** The identity cell every curriculum table starts with: the name. */
+export function NameCell({ name }: { name: string }) {
+  // The slug is left to the edit form: the backend's slugify drops Bengali vowel signs, so a
+  // slug under the name read as a garbled copy of it.
+  return <p className="min-w-0 truncate font-medium text-foreground">{name}</p>;
 }
 
 /** A right-aligned count column. */

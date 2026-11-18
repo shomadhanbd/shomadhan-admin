@@ -160,7 +160,7 @@ export function ChaptersPage() {
       width: "70px",
       cell: (c) => <span className="text-sm text-muted-foreground">{c.chapter_number}</span>,
     },
-    { key: "name", header: "Chapter", cell: (c) => <NameCell name={c.name} slug={c.slug} /> },
+    { key: "name", header: "Chapter", cell: (c) => <NameCell name={c.name} /> },
     {
       key: "subject",
       header: "Subject",
