@@ -74,6 +74,14 @@ export function MockTestSheet({
     patch({ levels: next, groups: keptGroups, subjects: keptSubjects });
   }
 
+  /** Dropping a group takes its subjects with it: they vanish from the list, so they could not be unpicked. */
+  function changeGroups(next: number[]) {
+    const keptSubjects = draft.subjects.filter(
+      (id) => next.length === 0 || subjects.data?.some((s) => s.id === id && next.includes(s.academic_group)),
+    );
+    patch({ groups: next, subjects: keptSubjects });
+  }
+
   const problem = draftProblem(draft);
   const dirty = useMemo(() => JSON.stringify(draft) !== JSON.stringify(initial), [draft, initial]);
   const totalMarks = draft.blocks.reduce((sum, b) => sum + blockMarks(b), 0);
@@ -81,7 +89,9 @@ export function MockTestSheet({
 
   const save = useMutation({
     mutationFn: () => (isEdit ? mockTestsApi.update(test!.id, toBody(draft)) : mockTestsApi.create(toBody(draft))),
-    onSuccess: () => {
+    onSuccess: (saved) => {
+      // The test's own page reads this entry; set first, so reopening Edit never starts from the pre-save copy.
+      queryClient.setQueryData([...mockTestKeys.all, "detail", saved.id], saved);
       queryClient.invalidateQueries({ queryKey: mockTestKeys.all });
       toast.success(isEdit ? "Mock test updated" : "Mock test added");
       onOpenChange(false);
@@ -149,7 +159,7 @@ export function MockTestSheet({
             label="Academic groups"
             options={groupOptions}
             value={draft.groups}
-            onChange={(v) => patch({ groups: v })}
+            onChange={changeGroups}
             empty="Pick an education level first."
           />
           <ChipSelect

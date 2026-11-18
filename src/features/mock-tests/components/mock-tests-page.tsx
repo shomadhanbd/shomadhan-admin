@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ClipboardList, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { dateTime } from "@/lib/format";
@@ -18,16 +18,15 @@ import { LookupSelect } from "@/components/shared/lookup-select";
 import { EmptyState, PageHeader, SearchInput } from "@/components/shared/page-shell";
 import { RowActions } from "@/components/shared/row-actions";
 import { MockTestSheet } from "./mock-test-sheet";
-import type { MockTest } from "@/features/mock-tests/types";
+import type { MockTest, MockTestDetail } from "@/features/mock-tests/types";
 
 export function MockTestsPage() {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState("");
-  /** `"new"`, or the id of the test being edited, while its sheet is open. */
-  const [editing, setEditing] = useState<number | "new" | null>(null);
+  /** `"new"`, or the test being edited, while its sheet is open. */
+  const [editing, setEditing] = useState<MockTestDetail | "new" | null>(null);
   /** The test whose published switch was flicked, while the admin confirms. */
   const [toggling, setToggling] = useState<MockTest | null>(null);
-  const editingId = typeof editing === "number" ? editing : null;
 
   const { rows, isLoading, isFetching, search, onSearch, setPage, deleting, setDeleting, remove, pagination } =
     useCrudList<MockTest>({
@@ -37,13 +36,9 @@ export function MockTestsPage() {
       onDeleted: () => toast.success("Mock test deleted"),
     });
 
-  // The list leaves the paper out, so the editor loads the whole test first, fresh each time.
-  const detail = useQuery({
-    queryKey: [...mockTestKeys.all, "detail", editingId],
-    queryFn: () => mockTestsApi.get(editingId!),
-    enabled: editingId !== null,
-    staleTime: 0,
-  });
+  // The list leaves the paper out, so Edit fetches the whole test, then hands the editor its own copy.
+  // A mutation, not a query: a query refetches on window focus, which would remount the editor and drop unsaved work.
+  const openEditor = useMutation({ mutationFn: mockTestsApi.get, onSuccess: setEditing });
 
   const publish = useMutation({
     mutationFn: (test: MockTest) => mockTestsApi.update(test.id, { is_published: !test.is_published }),
@@ -129,7 +124,11 @@ export function MockTestsPage() {
           <RowActions
             primary={{ label: "Open", href: `/mock-tests/${t.id}` }}
             actions={[
-              { icon: <Pencil className="h-4 w-4" />, label: `Edit ${t.title}`, onClick: () => setEditing(t.id) },
+              {
+                icon: <Pencil className="h-4 w-4" />,
+                label: `Edit ${t.title}`,
+                onClick: () => openEditor.mutate(t.id),
+              },
               {
                 icon: <Trash2 className="h-4 w-4" />,
                 label: `Delete ${t.title}`,
@@ -206,10 +205,12 @@ export function MockTestsPage() {
 
       <Pagination {...pagination} />
 
-      {editing === "new" && <MockTestSheet key="new" test={null} onOpenChange={(o) => !o && setEditing(null)} />}
-      {/* Held back during a refetch so the editor never opens on the previous copy of the test. */}
-      {editingId !== null && detail.data && !detail.isFetching && (
-        <MockTestSheet key={editingId} test={detail.data} onOpenChange={(o) => !o && setEditing(null)} />
+      {editing !== null && (
+        <MockTestSheet
+          key={editing === "new" ? "new" : editing.id}
+          test={editing === "new" ? null : editing}
+          onOpenChange={(o) => !o && setEditing(null)}
+        />
       )}
 
       <ConfirmDialog

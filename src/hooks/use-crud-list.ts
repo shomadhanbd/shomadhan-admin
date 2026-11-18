@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import api, { cleanParams } from "@/lib/api";
 import { stepBackIfEmptied } from "@/lib/utils";
 import { useDebounce } from "./use-debounce";
@@ -44,7 +45,17 @@ export function useCrudList<T extends { id: number | string }>({
     queryKey: [key, path, page, pageSize, debouncedSearch, params],
     queryFn: async () => {
       const query = cleanParams({ ...params, page, page_size: pageSize, search: debouncedSearch });
-      return (await api.get<Page<T>>(path, { params: query })).data;
+      try {
+        return (await api.get<Page<T>>(path, { params: query })).data;
+      } catch (err) {
+        // The page emptied behind us (its last row was deleted, or stopped matching the filter).
+        if (page > 1 && axios.isAxiosError(err) && err.response?.status === 404) {
+          // Only if still on that page: a delete steps back by itself, and must not be stepped back twice.
+          setPage((p) => (p === page ? Math.max(1, p - 1) : p));
+          return { count: 0, next: null, previous: null, results: [] };
+        }
+        throw err;
+      }
     },
     placeholderData: keepPreviousData,
     enabled,
@@ -61,9 +72,10 @@ export function useCrudList<T extends { id: number | string }>({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [key] });
       stepBackIfEmptied(rows.length, 1, setPage);
-      setDeleting(null);
       onDeleted?.();
     },
+    // On failure too: the toast explains a refused delete, and the confirm should not linger behind it.
+    onSettled: () => setDeleting(null),
   });
 
   const onSearch = useCallback((value: string) => {

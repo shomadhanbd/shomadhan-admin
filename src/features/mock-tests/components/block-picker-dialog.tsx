@@ -32,7 +32,9 @@ export function BlockPickerDialog({
   onToggle: (block: QuestionBlock) => void;
   onOpenChange: (o: boolean) => void;
 }) {
-  const [subject, setSubject] = useState(String(subjects[0]?.id ?? ""));
+  const [chosenSubject, setSubject] = useState("");
+  // Derived, not seeded once: the subjects lookup may still be loading when the dialog opens.
+  const subject = chosenSubject || String(subjects[0]?.id ?? "");
   const [chapter, setChapter] = useState("");
   const [type, setType] = useState("");
 

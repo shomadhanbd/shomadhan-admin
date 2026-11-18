@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AlertCircle, ClipboardList, Eye, EyeOff, Library, LockKeyhole, Wallet } from "lucide-react";
 import { apiError } from "@/lib/api-error";
+import { isAuthenticated } from "@/lib/session";
 import { useLogin } from "@/features/auth/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +33,12 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const login = useLogin();
+  const router = useRouter();
+
+  // Already signed in (a bookmark, or the back button after signing in): go straight to the panel.
+  useEffect(() => {
+    if (isAuthenticated()) router.replace("/dashboard");
+  }, [router]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

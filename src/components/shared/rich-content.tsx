@@ -9,22 +9,32 @@ import { useHydrated } from "@/hooks/use-hydrated";
 import { Textarea } from "@/components/ui/textarea";
 import { Field } from "@/components/shared/page-shell";
 
-/** `$$…$$` is display math, `$…$` inline; the same delimiters the mobile app renders. */
-const MATH = /\$\$([\s\S]+?)\$\$|\$([^$\n]+?)\$/g;
+/**
+ * A well-formed HTML tag, or a formula: `$$…$$` is display math and `$…$` inline, the delimiters the mobile app
+ * renders. An inline formula may not start or end with a space, nor be followed by a digit, so prices such as
+ * "$5 and $10" stay text.
+ */
+const TOKEN = /(<\/?[a-zA-Z][^<>]*>)|\$\$([\s\S]+?)\$\$|\$(?!\s)([^$\n]+?)(?<!\s)\$(?!\d)/g;
 
 const ENTITIES: Record<string, string> = { "&lt;": "<", "&gt;": ">", "&amp;": "&" };
 
+/** Stands in for a formula while the surrounding HTML is sanitised; plain text, so the sanitiser keeps it. */
+const placeholder = (index: number) => `@@math${index}@@`;
+
 function toHtml(content: string): string {
-  // Sanitised first, so nothing in stored content can run in the panel; KaTeX's own markup is added after.
-  return DOMPurify.sanitize(content).replace(MATH, (_match, block?: string, inline?: string) =>
-    // The sanitiser escapes `<` and `&` inside the formula, which KaTeX must see unescaped.
-    katex.renderToString(
-      (block ?? inline ?? "").replace(/&(lt|gt|amp);/g, (entity) => ENTITIES[entity]),
-      {
-        displayMode: block !== undefined,
-        throwOnError: false,
-      },
-    ),
+  // Formulas are lifted out before sanitising. Left in, `$x<y$` loses its tail: the sanitiser reads `<y…` as a tag.
+  // Tags are matched too, only so that a `$` inside an attribute is skipped rather than taken for a delimiter.
+  const formulas: string[] = [];
+  const lifted = content.replace(TOKEN, (match, tag?: string, block?: string, inline?: string) => {
+    if (tag) return match;
+    const tex = (block ?? inline ?? "").replace(/&(lt|gt|amp);/g, (entity) => ENTITIES[entity]);
+    formulas.push(katex.renderToString(tex, { displayMode: block !== undefined, throwOnError: false }));
+    return placeholder(formulas.length - 1);
+  });
+  // Sanitised so nothing in stored content can run in the panel; KaTeX's own markup goes back in after.
+  return DOMPurify.sanitize(lifted).replace(
+    /@@math(\d+)@@/g,
+    (match, index: string) => formulas[Number(index)] ?? match,
   );
 }
 
