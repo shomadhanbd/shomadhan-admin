@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ClipboardList, Eye, EyeOff, Pencil, Plus, Trash2 } from "lucide-react";
+import { ClipboardList, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { dateTime } from "@/lib/format";
 import { MOCK_TESTS, mockTestKeys, mockTestsApi } from "@/features/mock-tests/api";
@@ -10,6 +11,7 @@ import { MOCK_TEST_STATUSES, MOCK_TEST_STATUS_LABELS } from "@/features/mock-tes
 import { useCrudList } from "@/hooks/use-crud-list";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { LookupSelect } from "@/components/shared/lookup-select";
@@ -21,8 +23,11 @@ import type { MockTest } from "@/features/mock-tests/types";
 export function MockTestsPage() {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState("");
-  /** `"new"`, or the id of the test being edited while its sheet is open. */
+  /** `"new"`, or the id of the test being edited, while its sheet is open. */
   const [editing, setEditing] = useState<number | "new" | null>(null);
+  /** The test whose published switch was flicked, while the admin confirms. */
+  const [toggling, setToggling] = useState<MockTest | null>(null);
+  const editingId = typeof editing === "number" ? editing : null;
 
   const { rows, isLoading, isFetching, search, onSearch, setPage, deleting, setDeleting, remove, pagination } =
     useCrudList<MockTest>({
@@ -34,9 +39,9 @@ export function MockTestsPage() {
 
   // The list leaves the paper out, so the editor loads the whole test first, fresh each time.
   const detail = useQuery({
-    queryKey: [...mockTestKeys.all, "detail", editing],
-    queryFn: () => mockTestsApi.get(editing as number),
-    enabled: typeof editing === "number",
+    queryKey: [...mockTestKeys.all, "detail", editingId],
+    queryFn: () => mockTestsApi.get(editingId!),
+    enabled: editingId !== null,
     staleTime: 0,
   });
 
@@ -46,6 +51,7 @@ export function MockTestsPage() {
       queryClient.invalidateQueries({ queryKey: mockTestKeys.all });
       toast.success(saved.is_published ? "Mock test published" : "Mock test unpublished");
     },
+    onSettled: () => setToggling(null),
   });
 
   const columns: Column<MockTest>[] = [
@@ -54,15 +60,18 @@ export function MockTestsPage() {
       header: "Test",
       cell: (t) => (
         <div className="max-w-md min-w-0">
-          <p className="truncate font-medium text-foreground">{t.title}</p>
+          <Link href={`/mock-tests/${t.id}`} className="block truncate font-medium text-foreground hover:text-primary">
+            {t.title}
+          </Link>
           <p className="truncate text-xs text-muted-foreground">{t.subtitle || `${t.time_limit_minutes} minutes`}</p>
         </div>
       ),
     },
     {
+      // "Exam status", not plain "Status": it is where the test is in its schedule, not whether it is published.
       key: "status",
-      header: "Status",
-      width: "120px",
+      header: "Exam status",
+      width: "130px",
       cell: (t) => (
         <Badge variant={t.status === "draft" ? "outline" : t.status === "running" ? "default" : "secondary"}>
           {MOCK_TEST_STATUS_LABELS[t.status]}
@@ -98,22 +107,29 @@ export function MockTestsPage() {
       cell: (t) => <span className="text-sm text-muted-foreground">{Number(t.total_marks)}</span>,
     },
     {
+      // A labelled switch, not an icon: publishing changes what students see, so it must not be mistaken for "view".
+      key: "published",
+      header: "Published",
+      width: "110px",
+      cell: (t) => (
+        <Switch
+          aria-label={`${t.title} is published`}
+          checked={t.is_published}
+          onCheckedChange={() => setToggling(t)}
+        />
+      ),
+    },
+    {
       key: "actions",
       header: "",
       align: "right",
-      width: "140px",
+      width: "170px",
       cell: (t) => (
         <div className="flex justify-end">
           <RowActions
+            primary={{ label: "Open", href: `/mock-tests/${t.id}` }}
             actions={[
               { icon: <Pencil className="h-4 w-4" />, label: `Edit ${t.title}`, onClick: () => setEditing(t.id) },
-              t.is_published
-                ? {
-                    icon: <EyeOff className="h-4 w-4" />,
-                    label: `Unpublish ${t.title}`,
-                    onClick: () => publish.mutate(t),
-                  }
-                : { icon: <Eye className="h-4 w-4" />, label: `Publish ${t.title}`, onClick: () => publish.mutate(t) },
               {
                 icon: <Trash2 className="h-4 w-4" />,
                 label: `Delete ${t.title}`,
@@ -140,16 +156,16 @@ export function MockTestsPage() {
       <PageHeader title="Mock tests" description="Scheduled tests shown to a chosen audience">
         <SearchInput value={search} onChange={onSearch} placeholder="Search mock tests…" />
         <LookupSelect
-          ariaLabel="Filter by status"
+          ariaLabel="Filter by exam status"
           value={status}
           onChange={(v) => {
             setStatus(v);
             setPage(1);
           }}
           options={MOCK_TEST_STATUSES}
-          placeholder="All statuses"
-          allLabel="All statuses"
-          className="w-36 bg-card"
+          placeholder="All exam statuses"
+          allLabel="All exam statuses"
+          className="w-44 bg-card"
         />
         {newButton("lg")}
       </PageHeader>
@@ -192,9 +208,27 @@ export function MockTestsPage() {
 
       {editing === "new" && <MockTestSheet key="new" test={null} onOpenChange={(o) => !o && setEditing(null)} />}
       {/* Held back during a refetch so the editor never opens on the previous copy of the test. */}
-      {typeof editing === "number" && detail.data && !detail.isFetching && (
-        <MockTestSheet key={editing} test={detail.data} onOpenChange={(o) => !o && setEditing(null)} />
+      {editingId !== null && detail.data && !detail.isFetching && (
+        <MockTestSheet key={editingId} test={detail.data} onOpenChange={(o) => !o && setEditing(null)} />
       )}
+
+      <ConfirmDialog
+        open={toggling !== null}
+        onOpenChange={(o) => !o && setToggling(null)}
+        tone="default"
+        title={toggling?.is_published ? "Unpublish this mock test?" : "Publish this mock test?"}
+        description={
+          <>
+            <span className="font-medium text-foreground">{toggling?.title}</span>{" "}
+            {toggling?.is_published
+              ? "will be hidden from students until it is published again."
+              : "will become visible to the students in its audience."}
+          </>
+        }
+        confirmLabel={toggling?.is_published ? "Unpublish" : "Publish"}
+        pending={publish.isPending}
+        onConfirm={() => toggling && publish.mutate(toggling)}
+      />
 
       <ConfirmDialog
         open={deleting !== null}

@@ -44,18 +44,6 @@ export const navGroups: { label: string; items: NavItem[] }[] = [
     items: [{ title: "Dashboard", url: "/dashboard", icon: LayoutDashboard }],
   },
   {
-    // Ordered top-down, the way the hierarchy is built: a level, its groups, their subjects, and so on.
-    label: "Curriculum",
-    items: [
-      { title: "Education levels", url: "/curriculum/education-levels", icon: GraduationCap },
-      { title: "Academic groups", url: "/curriculum/academic-groups", icon: Layers },
-      { title: "Batches", url: "/curriculum/batches", icon: Users2 },
-      { title: "Subjects", url: "/curriculum/subjects", icon: BookOpen },
-      { title: "Chapters", url: "/curriculum/chapters", icon: BookMarked },
-      { title: "Topics", url: "/curriculum/topics", icon: Tags },
-    ],
-  },
-  {
     label: "Content",
     items: [
       { title: "Question bank", url: "/question-bank", icon: Library },
@@ -65,6 +53,19 @@ export const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "Exams",
     items: [{ title: "Mock tests", url: "/mock-tests", icon: ClipboardList }],
+  },
+  {
+    // Below the daily work: the curriculum is set up once and rarely changes.
+    // Its links run top-down, the way the hierarchy is built: a level, its groups, their subjects, and so on.
+    label: "Curriculum",
+    items: [
+      { title: "Education levels", url: "/curriculum/education-levels", icon: GraduationCap },
+      { title: "Academic groups", url: "/curriculum/academic-groups", icon: Layers },
+      { title: "Batches", url: "/curriculum/batches", icon: Users2 },
+      { title: "Subjects", url: "/curriculum/subjects", icon: BookOpen },
+      { title: "Chapters", url: "/curriculum/chapters", icon: BookMarked },
+      { title: "Topics", url: "/curriculum/topics", icon: Tags },
+    ],
   },
   {
     label: "More",
