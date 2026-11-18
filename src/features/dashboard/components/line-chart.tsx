@@ -276,29 +276,32 @@ export function LineChart({
         )}
       </div>
 
-      <table className="sr-only">
-        <caption>{series.map((s) => s.label).join(", ")}</caption>
-        <thead>
-          <tr>
-            <th scope="col">Period</th>
-            {series.map((s) => (
-              <th key={s.key} scope="col">
-                {s.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((d) => (
-            <tr key={d.start}>
-              <td>{periodLabel(d.start, bucket)}</td>
+      {/* The box, not the table, carries sr-only: a table ignores the 1px width and would widen the page. */}
+      <div className="sr-only">
+        <table>
+          <caption>{series.map((s) => s.label).join(", ")}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Period</th>
               {series.map((s) => (
-                <td key={s.key}>{d.values[s.key] ?? 0}</td>
+                <th key={s.key} scope="col">
+                  {s.label}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.map((d) => (
+              <tr key={d.start}>
+                <td>{periodLabel(d.start, bucket)}</td>
+                {series.map((s) => (
+                  <td key={s.key}>{d.values[s.key] ?? 0}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
