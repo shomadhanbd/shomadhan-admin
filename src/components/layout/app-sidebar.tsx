@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -14,7 +15,18 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { LayoutDashboard, LogOut, Settings } from "lucide-react";
+import {
+  BookMarked,
+  BookOpen,
+  ChevronDown,
+  GraduationCap,
+  Layers,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  Tags,
+  Users2,
+} from "lucide-react";
 
 interface NavItem {
   title: string;
@@ -27,6 +39,18 @@ export const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "Overview",
     items: [{ title: "Dashboard", url: "/dashboard", icon: LayoutDashboard }],
+  },
+  {
+    // Ordered top-down, the way the hierarchy is built: a level, its groups, their subjects, and so on.
+    label: "Curriculum",
+    items: [
+      { title: "Education levels", url: "/curriculum/education-levels", icon: GraduationCap },
+      { title: "Academic groups", url: "/curriculum/academic-groups", icon: Layers },
+      { title: "Batches", url: "/curriculum/batches", icon: Users2 },
+      { title: "Subjects", url: "/curriculum/subjects", icon: BookOpen },
+      { title: "Chapters", url: "/curriculum/chapters", icon: BookMarked },
+      { title: "Topics", url: "/curriculum/topics", icon: Tags },
+    ],
   },
   {
     label: "More",
@@ -44,6 +68,8 @@ function activeUrl(pathname: string) {
 export function AppSidebar({ onLogout }: { onLogout: () => void }) {
   const pathname = usePathname();
   const current = activeUrl(pathname);
+  // Groups the admin has folded away; everything starts open.
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   return (
     // Full height from the top edge: the sidebar is its own column now, not
@@ -61,34 +87,57 @@ export function AppSidebar({ onLogout }: { onLogout: () => void }) {
       {/* The nav scrolls on its own so every link stays reachable however
           long the list grows, without the page moving underneath it. */}
       <SidebarContent className="gap-0 overflow-y-auto py-2">
-        {navGroups.map((group, groupIndex) => (
-          <SidebarGroup key={group.label} className="px-0 py-0">
-            <SidebarGroupLabel
-              className={`h-auto px-6 pb-1.5 text-[11px] leading-none font-semibold tracking-[0.12em] text-sidebar-foreground/40 uppercase ${
-                groupIndex === 0 ? "pt-2" : "pt-5"
-              }`}
-            >
-              {group.label}
-            </SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu className="gap-0">
-                {group.items.map((item) => (
-                  <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton
-                      render={<Link href={item.url} />}
-                      isActive={current === item.url}
-                      // `data-active:` because the primitive sets a bare attribute; the highlight runs full width.
-                      className="relative h-11 gap-3 rounded-none px-6 text-sm text-sidebar-foreground/75 transition-colors before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-sidebar-primary before:opacity-0 before:transition-opacity hover:bg-white/[0.06] hover:text-white data-active:bg-white/[0.09] data-active:font-medium data-active:text-white data-active:before:opacity-100"
-                    >
-                      <item.icon className="h-[18px] w-[18px] shrink-0" />
-                      <span className="truncate">{item.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        {navGroups.map((group, groupIndex) => {
+          // A lone link gains nothing from folding, so only longer groups get the arrow.
+          const foldable = group.items.length > 1;
+          const open = !collapsed[group.label];
+          const labelClass = `h-auto px-6 pb-1.5 text-[11px] leading-none font-semibold tracking-[0.12em] text-sidebar-foreground/40 uppercase ${
+            groupIndex === 0 ? "pt-2" : "pt-5"
+          }`;
+
+          return (
+            <SidebarGroup key={group.label} className="px-0 py-0">
+              {foldable ? (
+                <SidebarGroupLabel
+                  render={
+                    <button
+                      type="button"
+                      onClick={() => setCollapsed((c) => ({ ...c, [group.label]: open }))}
+                      aria-expanded={open}
+                    />
+                  }
+                  className={`${labelClass} w-full cursor-pointer justify-between transition-colors hover:text-sidebar-foreground/75`}
+                >
+                  {group.label}
+                  <ChevronDown
+                    className={`h-3.5 w-3.5 shrink-0 transition-transform duration-(--duration-short) ${open ? "" : "-rotate-90"}`}
+                  />
+                </SidebarGroupLabel>
+              ) : (
+                <SidebarGroupLabel className={labelClass}>{group.label}</SidebarGroupLabel>
+              )}
+              {open && (
+                <SidebarGroupContent>
+                  <SidebarMenu className="gap-0">
+                    {group.items.map((item) => (
+                      <SidebarMenuItem key={item.url}>
+                        <SidebarMenuButton
+                          render={<Link href={item.url} />}
+                          isActive={current === item.url}
+                          // `data-active:` because the primitive sets a bare attribute; the highlight runs full width.
+                          className="relative h-11 gap-3 rounded-none px-6 text-sm text-sidebar-foreground/75 transition-colors before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-sidebar-primary before:opacity-0 before:transition-opacity hover:bg-white/[0.06] hover:text-white data-active:bg-white/[0.09] data-active:font-medium data-active:text-white data-active:before:opacity-100"
+                        >
+                          <item.icon className="h-[18px] w-[18px] shrink-0" />
+                          <span className="truncate">{item.title}</span>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              )}
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
 
       {/* Pinned rather than sitting at the end of the scrolling list, where
