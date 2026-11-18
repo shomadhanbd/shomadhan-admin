@@ -1,4 +1,5 @@
 import { JSON_METADATA_TYPES, PART_LABELS } from "./constants";
+import type { PreviewBlock } from "./components/block-preview";
 import type { BlockKind, QuestionBlock, QuestionBlockBody, QuestionBody, QuestionType } from "./types";
 
 /** The question editor's form state: one draft per block, holding a draft per question. */
@@ -146,6 +147,19 @@ function toQuestionBody(q: QuestionDraft): QuestionBody {
         content: isMcq ? o.content.trim() : o.content,
         is_correct: isMcq ? Boolean(o.is_correct) : o.is_correct,
       })),
+  };
+}
+
+/** The draft as the student-view preview reads it: what would be saved, keyed by the editor's own keys. */
+export function toPreview(draft: BlockDraft): PreviewBlock {
+  const body = toBody(draft);
+  return {
+    stimulus_content: draft.kind === "group" ? draft.stimulus_content : "",
+    questions: body.questions.map((question, index) => ({
+      ...question,
+      id: draft.questions[index].key,
+      options: question.options.map((option, position) => ({ ...option, id: position })),
+    })),
   };
 }
 

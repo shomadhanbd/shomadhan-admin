@@ -1,6 +1,7 @@
 "use client";
 
-import { use, useState } from "react";
+import { use } from "react";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { ClipboardList, Clock, ListChecks, Pencil, RotateCcw, Trophy } from "lucide-react";
 import { dateTime } from "@/lib/format";
@@ -11,11 +12,10 @@ import { MOCK_TEST_STATUS_LABELS } from "@/features/mock-tests/constants";
 import { BlockPreview } from "@/features/question-bank/components/block-preview";
 import { QUESTION_TYPE_LABELS } from "@/features/question-bank/constants";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ViewRow } from "@/components/shared/edit-card";
 import { EmptyState, PageHeader } from "@/components/shared/page-shell";
-import { MockTestSheet } from "./mock-test-sheet";
 import type { MockTestDetail } from "@/features/mock-tests/types";
 
 const CARD = "rounded-(--shape-md) bg-card shadow-sm ring-1 ring-foreground/[0.07]";
@@ -57,7 +57,6 @@ function Card({ title, aside, children }: { title: string; aside?: React.ReactNo
 /** One mock test on a page of its own: its numbers, settings and the whole paper with the answer key. */
 export function MockTestDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const [editing, setEditing] = useState(false);
   const levels = useEducationLevels();
   const groups = useAcademicGroups();
   const subjects = useSubjects();
@@ -102,10 +101,10 @@ export function MockTestDetailPage({ params }: { params: Promise<{ id: string }>
         <Badge variant={test.status === "draft" ? "outline" : test.status === "running" ? "default" : "secondary"}>
           {MOCK_TEST_STATUS_LABELS[test.status]}
         </Badge>
-        <Button size="lg" variant="outline" onClick={() => setEditing(true)}>
+        <Link href={`/mock-tests/${test.id}/edit`} className={buttonClass({ size: "lg" })}>
           <Pencil className="h-4 w-4" />
           Edit
-        </Button>
+        </Link>
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -163,9 +162,9 @@ export function MockTestDetailPage({ params }: { params: Promise<{ id: string }>
               title="No questions on this test yet"
               description="Add questions from the bank before publishing."
               action={
-                <Button variant="outline" onClick={() => setEditing(true)}>
+                <Link href={`/mock-tests/${test.id}/edit`} className={buttonClass({ variant: "outline" })}>
                   Add questions
-                </Button>
+                </Link>
               }
             />
           ) : (
@@ -202,8 +201,6 @@ export function MockTestDetailPage({ params }: { params: Promise<{ id: string }>
           )}
         </div>
       </div>
-
-      {editing && <MockTestSheet test={test} onOpenChange={(o) => !o && setEditing(false)} />}
     </div>
   );
 }

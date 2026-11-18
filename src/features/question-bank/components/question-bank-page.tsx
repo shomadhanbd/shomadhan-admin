@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Library, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -18,7 +20,6 @@ import { LookupSelect } from "@/components/shared/lookup-select";
 import { EmptyState, PageHeader, SearchInput } from "@/components/shared/page-shell";
 import { RichContent } from "@/components/shared/rich-content";
 import { RowActions } from "@/components/shared/row-actions";
-import { QuestionBlockSheet } from "./question-block-sheet";
 import type { QuestionBlock } from "@/features/question-bank/types";
 
 /** The words a row is recognised by: a group's stimulus, else its first question. */
@@ -32,7 +33,7 @@ export function QuestionBankPage() {
   const [subject, setSubject] = useState("");
   const [chapter, setChapter] = useState("");
   const [type, setType] = useState("");
-  const [editing, setEditing] = useState<QuestionBlock | null | "new">(null);
+  const router = useRouter();
 
   const chapters = useQuery({
     queryKey: [...curriculumKeys.chapters.lookup, subject],
@@ -58,10 +59,13 @@ export function QuestionBankPage() {
       key: "question",
       header: "Question",
       cell: (b) => (
-        <div className="max-w-xl min-w-0">
+        // line-clamp, not truncate: a nowrap cell is as wide as its whole text, and pushed the table past its frame.
+        <div className="min-w-0">
           {/* Through RichContent so a formula in the first line reads as maths, not as `$x^2$`. */}
-          <RichContent content={preview(b)} className="truncate font-medium" />
-          <p className="truncate text-xs text-muted-foreground">
+          <Link href={`/question-bank/${b.id}`} className="block hover:text-primary">
+            <RichContent content={preview(b)} className="line-clamp-2 font-medium" />
+          </Link>
+          <p className="line-clamp-1 text-xs text-muted-foreground">
             {b.slug}
             {b.kind === "group" && ` · ${b.question_count} ${b.question_count === 1 ? "question" : "questions"}`}
           </p>
@@ -71,7 +75,7 @@ export function QuestionBankPage() {
     {
       key: "type",
       header: "Type",
-      width: "150px",
+      width: "130px",
       cell: (b) => (
         <div className="flex flex-wrap gap-1">
           {[...new Set(b.questions.map((q) => q.question_type))].map((t) => (
@@ -86,11 +90,11 @@ export function QuestionBankPage() {
       key: "placement",
       header: "Subject",
       secondary: true,
-      width: "220px",
+      width: "200px",
       cell: (b) => (
         <div className="min-w-0">
-          <p className="truncate text-sm text-foreground">{b.subject_name}</p>
-          <p className="truncate text-xs text-muted-foreground">{b.chapter_name ?? "No chapter"}</p>
+          <p className="line-clamp-1 text-sm text-foreground">{b.subject_name}</p>
+          <p className="line-clamp-1 text-xs text-muted-foreground">{b.chapter_name ?? "No chapter"}</p>
         </div>
       ),
     },
@@ -102,8 +106,13 @@ export function QuestionBankPage() {
       cell: (b) => (
         <div className="flex justify-end">
           <RowActions
+            primary={{ label: "Open", href: `/question-bank/${b.id}` }}
             actions={[
-              { icon: <Pencil className="h-4 w-4" />, label: `Edit ${b.slug}`, onClick: () => setEditing(b) },
+              {
+                icon: <Pencil className="h-4 w-4" />,
+                label: `Edit ${b.slug}`,
+                onClick: () => router.push(`/question-bank/${b.id}/edit`),
+              },
               {
                 icon: <Trash2 className="h-4 w-4" />,
                 label: `Delete ${b.slug}`,
@@ -119,7 +128,14 @@ export function QuestionBankPage() {
 
   const filtered = Boolean(search || subject || chapter || type);
   const newButton = (size?: "lg") => (
-    <Button size={size} onClick={() => setEditing("new")}>
+    <Button
+      size={size}
+      onClick={() => {
+        // A new question starts in the subject and chapter the list is filtered to.
+        const filters = new URLSearchParams(Object.entries({ subject, chapter }).filter(([, v]) => v));
+        router.push(`/question-bank/new${filters.size ? `?${filters}` : ""}`);
+      }}
+    >
       <Plus className="h-4 w-4" />
       New question
     </Button>
@@ -212,24 +228,14 @@ export function QuestionBankPage() {
 
       <Pagination {...pagination} />
 
-      {editing !== null && (
-        <QuestionBlockSheet
-          key={editing === "new" ? "new" : editing.id}
-          block={editing === "new" ? null : editing}
-          defaults={{ subject, chapter }}
-          onOpenChange={(o) => !o && setEditing(null)}
-        />
-      )}
-
       <ConfirmDialog
         open={deleting !== null}
         onOpenChange={(o) => !o && setDeleting(null)}
         title="Delete this question?"
         description={
           <>
-            <span className="font-medium text-foreground">{deleting && preview(deleting)}</span> will be removed, along
-            with students&apos; practice history for it. A question used in a test, or one that has reports or exam
-            answers, cannot be deleted.
+            <span className="font-medium text-foreground">{deleting && preview(deleting)}</span> will be removed for
+            good. A question students have practised, one used in a test, or one with reports cannot be deleted.
           </>
         }
         confirmLabel="Delete question"

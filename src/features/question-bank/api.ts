@@ -13,4 +13,7 @@ export const questionBlocksApi = {
   create: async (body: QuestionBlockBody) => (await api.post<QuestionBlock>(QUESTION_BLOCKS, body)).data,
   update: async (id: number, body: QuestionBlockBody) =>
     (await api.patch<QuestionBlock>(`${QUESTION_BLOCKS}${id}/`, body)).data,
+  remove: async (id: number) => {
+    await api.delete(`${QUESTION_BLOCKS}${id}/`);
+  },
 };

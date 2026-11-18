@@ -42,6 +42,7 @@ export interface QuestionBlock {
   stimulus_type: string;
   stimulus_content: string;
   questions: BankQuestion[];
+  updated_at: string;
 }
 
 /** An option or question without an `id` is created; one with an `id` is updated in place. */

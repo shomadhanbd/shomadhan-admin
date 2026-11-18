@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import DOMPurify from "dompurify";
 import katex from "katex";
 import "katex/dist/katex.min.css";
@@ -55,7 +55,22 @@ export function RichContent({ content, className }: { content: string; className
   );
 }
 
-/** A textarea for HTML + LaTeX content with a live preview underneath. */
+/** The formats the toolbar inserts: the tags the mobile app renders, and the two maths delimiters. */
+const FORMATS: { label: string; title: string; before: string; after: string; className?: string }[] = [
+  { label: "B", title: "Bold", before: "<b>", after: "</b>", className: "font-bold" },
+  { label: "I", title: "Italic", before: "<i>", after: "</i>", className: "italic" },
+  { label: "U", title: "Underline", before: "<u>", after: "</u>", className: "underline" },
+  { label: "x²", title: "Superscript", before: "<sup>", after: "</sup>" },
+  { label: "x₂", title: "Subscript", before: "<sub>", after: "</sub>" },
+  { label: "$x$", title: "Inline maths", before: "$", after: "$", className: "font-mono" },
+  { label: "$$", title: "Maths on its own line", before: "$$", after: "$$", className: "font-mono" },
+  { label: "↵", title: "Line break", before: "<br>", after: "" },
+];
+
+/**
+ * A textarea for HTML + LaTeX content, with a toolbar that wraps the selection in a format and a live preview.
+ * `previewClassName` lets a page that shows its own preview hide this one at the sizes where it does.
+ */
 export function ContentField({
   id,
   label,
@@ -65,6 +80,7 @@ export function ContentField({
   hint,
   rows = 3,
   placeholder,
+  previewClassName,
 }: {
   id: string;
   label: string;
@@ -74,19 +90,58 @@ export function ContentField({
   hint?: string;
   rows?: number;
   placeholder?: string;
+  previewClassName?: string;
 }) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  function wrap(before: string, after: string) {
+    const area = ref.current;
+    if (!area) return;
+    const { selectionStart: start, selectionEnd: end } = area;
+    onChange(value.slice(0, start) + before + value.slice(start, end) + after + value.slice(end));
+    // Put the caret back inside the new tags, around the text that was selected.
+    requestAnimationFrame(() => {
+      area.focus();
+      area.setSelectionRange(start + before.length, end + before.length);
+    });
+  }
+
   return (
     <Field id={id} label={label} required={required} hint={hint}>
-      <Textarea
-        id={id}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        rows={rows}
-        placeholder={placeholder}
-        className="font-mono text-xs"
-      />
+      <div className="overflow-hidden rounded-lg border border-input focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
+        <div
+          role="toolbar"
+          aria-label={`Format ${label}`}
+          className="flex flex-wrap gap-0.5 border-b border-border bg-surface-2 px-1.5 py-1"
+        >
+          {FORMATS.map((format) => (
+            <button
+              key={format.title}
+              type="button"
+              title={format.title}
+              aria-label={format.title}
+              onClick={() => wrap(format.before, format.after)}
+              className={cn(
+                "flex h-7 min-w-7 items-center justify-center rounded-(--shape-xs) px-1.5 text-xs text-muted-foreground transition-colors duration-(--duration-short) hover:bg-primary/(--state-hover) hover:text-foreground",
+                format.className,
+              )}
+            >
+              {format.label}
+            </button>
+          ))}
+        </div>
+        <Textarea
+          ref={ref}
+          id={id}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          rows={rows}
+          placeholder={placeholder}
+          className="rounded-none border-0 font-mono text-xs shadow-none focus-visible:ring-0"
+        />
+      </div>
       {value.trim() && (
-        <div className="rounded-(--shape-sm) bg-surface-2 px-3 py-2">
+        <div className={cn("rounded-(--shape-sm) bg-surface-2 px-3 py-2", previewClassName)}>
           <p className="mb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">Preview</p>
           <RichContent content={value} />
         </div>

@@ -1,12 +1,24 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { QUESTION_TYPE_LABELS } from "@/features/question-bank/constants";
+import { JSON_METADATA_TYPES, QUESTION_TYPE_LABELS } from "@/features/question-bank/constants";
 import { RichContent } from "@/components/shared/rich-content";
-import type { QuestionBlock } from "@/features/question-bank/types";
+import type { BankQuestion } from "@/features/question-bank/types";
+
+/** What the preview needs of one question; ids are strings for a draft that has not been saved yet. */
+type PreviewQuestion = Omit<BankQuestion, "id" | "slug" | "order_in_set" | "options"> & {
+  id: number | string;
+  options: { id: number | string; content: string; is_correct: boolean | null }[];
+};
+
+/** What the preview needs of a block: a saved QuestionBlock, or `toPreview` of an editor draft. */
+export interface PreviewBlock {
+  stimulus_content: string;
+  questions: PreviewQuestion[];
+}
 
 /** One block as a student reads it, plus the answer key: the stimulus, each question, and the correct options. */
-export function BlockPreview({ block, number }: { block: QuestionBlock; number?: number }) {
+export function BlockPreview({ block, number }: { block: PreviewBlock; number?: number }) {
   return (
     <div className="space-y-3">
       {block.stimulus_content && (
@@ -41,6 +53,20 @@ export function BlockPreview({ block, number }: { block: QuestionBlock; number?:
               <div className="border-l-2 border-border pl-3">
                 <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">Model answer</p>
                 <RichContent content={question.model_answer} className="text-muted-foreground" />
+              </div>
+            )}
+            {question.explanation && (
+              <div className="border-l-2 border-border pl-3">
+                <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">Explanation</p>
+                <RichContent content={question.explanation} className="text-muted-foreground" />
+              </div>
+            )}
+            {JSON_METADATA_TYPES.includes(question.question_type) && Object.keys(question.metadata).length > 0 && (
+              <div className="border-l-2 border-border pl-3">
+                <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">Answer key</p>
+                <pre className="overflow-x-auto font-mono text-xs whitespace-pre-wrap text-muted-foreground">
+                  {JSON.stringify(question.metadata, null, 2)}
+                </pre>
               </div>
             )}
             <p className="text-xs text-muted-foreground">

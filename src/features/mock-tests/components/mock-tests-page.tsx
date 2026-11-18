@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ClipboardList, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { dateTime } from "@/lib/format";
 import { MOCK_TESTS, mockTestKeys, mockTestsApi } from "@/features/mock-tests/api";
 import { MOCK_TEST_STATUSES, MOCK_TEST_STATUS_LABELS } from "@/features/mock-tests/constants";
+import { marksLabel } from "@/features/mock-tests/mock-test-draft";
 import { useCrudList } from "@/hooks/use-crud-list";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,14 +19,12 @@ import { DataTable, Pagination, type Column } from "@/components/shared/data-tab
 import { LookupSelect } from "@/components/shared/lookup-select";
 import { EmptyState, PageHeader, SearchInput } from "@/components/shared/page-shell";
 import { RowActions } from "@/components/shared/row-actions";
-import { MockTestSheet } from "./mock-test-sheet";
-import type { MockTest, MockTestDetail } from "@/features/mock-tests/types";
+import type { MockTest } from "@/features/mock-tests/types";
 
 export function MockTestsPage() {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState("");
-  /** `"new"`, or the test being edited, while its sheet is open. */
-  const [editing, setEditing] = useState<MockTestDetail | "new" | null>(null);
+  const router = useRouter();
   /** The test whose published switch was flicked, while the admin confirms. */
   const [toggling, setToggling] = useState<MockTest | null>(null);
 
@@ -35,10 +35,6 @@ export function MockTestsPage() {
       params: { status },
       onDeleted: () => toast.success("Mock test deleted"),
     });
-
-  // The list leaves the paper out, so Edit fetches the whole test, then hands the editor its own copy.
-  // A mutation, not a query: a query refetches on window focus, which would remount the editor and drop unsaved work.
-  const openEditor = useMutation({ mutationFn: mockTestsApi.get, onSuccess: setEditing });
 
   const publish = useMutation({
     mutationFn: (test: MockTest) => mockTestsApi.update(test.id, { is_published: !test.is_published }),
@@ -53,12 +49,15 @@ export function MockTestsPage() {
     {
       key: "test",
       header: "Test",
+      // The schedule shares this cell rather than taking a column, so the table fits a laptop screen.
       cell: (t) => (
-        <div className="max-w-md min-w-0">
-          <Link href={`/mock-tests/${t.id}`} className="block truncate font-medium text-foreground hover:text-primary">
+        <div className="min-w-0">
+          <Link href={`/mock-tests/${t.id}`} className="line-clamp-1 font-medium text-foreground hover:text-primary">
             {t.title}
           </Link>
-          <p className="truncate text-xs text-muted-foreground">{t.subtitle || `${t.time_limit_minutes} minutes`}</p>
+          <p className="line-clamp-1 text-xs text-muted-foreground">
+            {dateTime(t.start_time)} – {dateTime(t.end_time)}
+          </p>
         </div>
       ),
     },
@@ -66,7 +65,7 @@ export function MockTestsPage() {
       // "Exam status", not plain "Status": it is where the test is in its schedule, not whether it is published.
       key: "status",
       header: "Exam status",
-      width: "130px",
+      width: "120px",
       cell: (t) => (
         <Badge variant={t.status === "draft" ? "outline" : t.status === "running" ? "default" : "secondary"}>
           {MOCK_TEST_STATUS_LABELS[t.status]}
@@ -74,38 +73,25 @@ export function MockTestsPage() {
       ),
     },
     {
-      key: "schedule",
-      header: "Schedule",
+      key: "paper",
+      header: "Paper",
+      align: "right",
       secondary: true,
-      width: "210px",
+      width: "110px",
       cell: (t) => (
-        <div className="min-w-0">
-          <p className="truncate text-sm text-foreground">{dateTime(t.start_time)}</p>
-          <p className="truncate text-xs text-muted-foreground">to {dateTime(t.end_time)}</p>
+        <div>
+          <p className="text-sm text-foreground">
+            {t.question_count} {t.question_count === 1 ? "question" : "questions"}
+          </p>
+          <p className="text-xs text-muted-foreground">{marksLabel(Number(t.total_marks))}</p>
         </div>
       ),
-    },
-    {
-      key: "questions",
-      header: "Questions",
-      align: "right",
-      secondary: true,
-      width: "100px",
-      cell: (t) => <span className="text-sm text-muted-foreground">{t.question_count}</span>,
-    },
-    {
-      key: "marks",
-      header: "Marks",
-      align: "right",
-      secondary: true,
-      width: "90px",
-      cell: (t) => <span className="text-sm text-muted-foreground">{Number(t.total_marks)}</span>,
     },
     {
       // A labelled switch, not an icon: publishing changes what students see, so it must not be mistaken for "view".
       key: "published",
       header: "Published",
-      width: "110px",
+      width: "100px",
       cell: (t) => (
         <Switch
           aria-label={`${t.title} is published`}
@@ -127,7 +113,7 @@ export function MockTestsPage() {
               {
                 icon: <Pencil className="h-4 w-4" />,
                 label: `Edit ${t.title}`,
-                onClick: () => openEditor.mutate(t.id),
+                onClick: () => router.push(`/mock-tests/${t.id}/edit`),
               },
               {
                 icon: <Trash2 className="h-4 w-4" />,
@@ -144,7 +130,7 @@ export function MockTestsPage() {
 
   const filtered = Boolean(search || status);
   const newButton = (size?: "lg") => (
-    <Button size={size} onClick={() => setEditing("new")}>
+    <Button size={size} onClick={() => router.push("/mock-tests/new")}>
       <Plus className="h-4 w-4" />
       New mock test
     </Button>
@@ -204,14 +190,6 @@ export function MockTestsPage() {
       />
 
       <Pagination {...pagination} />
-
-      {editing !== null && (
-        <MockTestSheet
-          key={editing === "new" ? "new" : editing.id}
-          test={editing === "new" ? null : editing}
-          onOpenChange={(o) => !o && setEditing(null)}
-        />
-      )}
 
       <ConfirmDialog
         open={toggling !== null}

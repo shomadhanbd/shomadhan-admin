@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, Flag, Pencil, RotateCcw, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { date, plainText } from "@/lib/format";
-import { questionBlocksApi } from "@/features/question-bank/api";
 import { QUESTION_TYPE_LABELS } from "@/features/question-bank/constants";
-import { QuestionBlockSheet } from "@/features/question-bank/components/question-block-sheet";
 import { REPORTS, reportKeys, reportsApi } from "@/features/reports/api";
 import { REPORT_REASONS, REPORT_REASON_LABELS, REPORT_STATUSES } from "@/features/reports/constants";
 import { useCrudList } from "@/hooks/use-crud-list";
@@ -19,7 +18,6 @@ import { LookupSelect } from "@/components/shared/lookup-select";
 import { EmptyState, PageHeader, SearchInput } from "@/components/shared/page-shell";
 import { RichContent } from "@/components/shared/rich-content";
 import { RowActions } from "@/components/shared/row-actions";
-import type { QuestionBlock } from "@/features/question-bank/types";
 import type { Report, ReportStatus } from "@/features/reports/types";
 
 const STATUS_TOAST: Record<ReportStatus, string> = {
@@ -33,8 +31,7 @@ export function ReportsPage() {
   // The queue opens on what still needs attention.
   const [status, setStatus] = useState("open");
   const [reason, setReason] = useState("");
-  /** The block of the report being fixed, while its question editor is open. */
-  const [fixing, setFixing] = useState<QuestionBlock | null>(null);
+  const router = useRouter();
 
   const { rows, isLoading, isFetching, search, onSearch, setPage, deleting, setDeleting, remove, pagination } =
     useCrudList<Report>({
@@ -51,10 +48,6 @@ export function ReportsPage() {
       toast.success(STATUS_TOAST[next]);
     },
   });
-
-  // Fetched on click and handed to the editor as its own copy. A mutation, not a query: a query refetches on
-  // window focus, which would remount the editor and drop unsaved work.
-  const openEditor = useMutation({ mutationFn: questionBlocksApi.get, onSuccess: setFixing });
 
   const columns: Column<Report>[] = [
     {
@@ -118,7 +111,7 @@ export function ReportsPage() {
                 {
                   icon: <Pencil className="h-4 w-4" />,
                   label: `Fix question ${r.question_slug}`,
-                  onClick: () => openEditor.mutate(r.block),
+                  onClick: () => router.push(`/question-bank/${r.block}/edit`),
                 },
                 ...(r.status === "open"
                   ? [
@@ -212,15 +205,6 @@ export function ReportsPage() {
       />
 
       <Pagination {...pagination} />
-
-      {fixing !== null && (
-        <QuestionBlockSheet
-          key={fixing.id}
-          block={fixing}
-          defaults={{ subject: "", chapter: "" }}
-          onOpenChange={(o) => !o && setFixing(null)}
-        />
-      )}
 
       <ConfirmDialog
         open={deleting !== null}
