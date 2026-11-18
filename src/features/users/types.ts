@@ -51,7 +51,7 @@ export interface UserSubscription {
   starts_at: string;
   expires_at: string;
   is_active: boolean;
-  source: "sslcommerz" | "apple";
+  source: "sslcommerz" | "apple" | "admin";
 }
 
 /** One account fetched on its own: the list fields plus progress, streak, recent tests and subscriptions. */

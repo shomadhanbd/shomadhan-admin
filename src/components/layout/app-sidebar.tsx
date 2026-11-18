@@ -20,6 +20,7 @@ import {
   BookOpen,
   ChevronDown,
   ClipboardList,
+  BadgeCheck,
   CreditCard,
   Flag,
   GraduationCap,
@@ -68,6 +69,7 @@ export const navGroups: { label: string; items: NavItem[] }[] = [
       { title: "Plans", url: "/billing/products", icon: Package },
       { title: "Coupons", url: "/billing/coupons", icon: TicketPercent },
       { title: "Payments", url: "/billing/payments", icon: CreditCard },
+      { title: "Subscriptions", url: "/billing/subscriptions", icon: BadgeCheck },
     ],
   },
   {

@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { date, dateTime } from "@/lib/format";
 import { useAcademicGroups, useBatches, useEducationLevels } from "@/lib/lookups";
 import { StatTile } from "@/features/dashboard/components/stat-tile";
+import { GrantDialog } from "@/features/subscriptions/components/subscription-dialogs";
+import { subscriptionSource } from "@/features/subscriptions/constants";
 import { USERS, userKeys, usersApi } from "@/features/users/api";
 import { useRecordSave } from "@/hooks/use-record-save";
 import { Badge } from "@/components/ui/badge";
@@ -195,6 +197,7 @@ export function UserDetailPage({ params }: { params: Promise<{ id: string }> }) 
   const { id } = use(params);
   const queryClient = useQueryClient();
   const [confirmingStatus, setConfirmingStatus] = useState(false);
+  const [granting, setGranting] = useState(false);
 
   const { data: user, isLoading } = useQuery({
     queryKey: userKeys.detail(Number(id)),
@@ -315,7 +318,14 @@ export function UserDetailPage({ params }: { params: Promise<{ id: string }> }) 
         </div>
 
         <div className="space-y-4">
-          <Card title="Subscriptions">
+          <Card
+            title="Subscriptions"
+            aside={
+              <Button variant="outline" size="sm" onClick={() => setGranting(true)}>
+                Grant VIP
+              </Button>
+            }
+          >
             {user.subscriptions.length === 0 ? (
               <p className="text-sm text-muted-foreground">No subscriptions. The student is on the free plan.</p>
             ) : (
@@ -325,7 +335,7 @@ export function UserDetailPage({ params }: { params: Promise<{ id: string }> }) 
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-foreground">{s.product_title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {date(s.starts_at)} – {date(s.expires_at)} · {s.source === "apple" ? "Apple" : "SSLCommerz"}
+                        {date(s.starts_at)} – {date(s.expires_at)} · {subscriptionSource(s.source)}
                       </p>
                     </div>
                     {s.is_active && new Date(s.expires_at) > new Date() ? (
@@ -383,6 +393,13 @@ export function UserDetailPage({ params }: { params: Promise<{ id: string }> }) 
         pending={toggleActive.isPending}
         onConfirm={() => toggleActive.mutate()}
       />
+
+      {granting && (
+        <GrantDialog
+          student={{ id: user.id, name: user.full_name, mobile: user.mobile }}
+          onOpenChange={(o) => !o && setGranting(false)}
+        />
+      )}
     </div>
   );
 }
