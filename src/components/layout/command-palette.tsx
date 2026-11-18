@@ -80,8 +80,8 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
   return (
     <Dialog open={open} onOpenChange={(o) => (o ? onOpenChange(true) : close())}>
       <DialogContent showCloseButton={false} className="top-24 translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-xl">
-        <DialogTitle className="sr-only">Search</DialogTitle>
-        <DialogDescription className="sr-only">Jump to a screen.</DialogDescription>
+        <DialogTitle className="sr-only">Jump to a page</DialogTitle>
+        <DialogDescription className="sr-only">Type a page name, then press Enter to open it.</DialogDescription>
 
         <div className="flex items-center gap-3 border-b border-border px-4">
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -89,8 +89,8 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Search screens…"
-            aria-label="Search screens"
+            placeholder="Jump to a page…"
+            aria-label="Jump to a page"
             autoFocus
             className="h-12 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />

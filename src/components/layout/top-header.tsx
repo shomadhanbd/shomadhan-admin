@@ -153,11 +153,11 @@ export function TopHeader({ onLogout }: { onLogout: () => void }) {
       <div className="ml-auto flex min-w-0 flex-1 justify-end lg:justify-center">
         <button
           onClick={() => setPaletteOpen(true)}
-          aria-label="Search screens"
+          aria-label="Jump to a page"
           className="flex h-9 w-9 items-center justify-center rounded-(--shape-sm) text-muted-foreground transition-colors duration-(--duration-short) hover:bg-accent hover:text-foreground lg:h-9 lg:w-full lg:max-w-sm lg:justify-start lg:gap-2 lg:border lg:border-border lg:bg-background lg:px-3"
         >
           <Search className="h-4 w-4 shrink-0" />
-          <span className="hidden flex-1 text-left text-sm lg:inline">Search…</span>
+          <span className="hidden flex-1 text-left text-sm lg:inline">Jump to a page…</span>
           <kbd className="hidden rounded border border-border px-1.5 py-0.5 font-sans text-[11px] text-muted-foreground lg:inline">
             ⌘K
           </kbd>
