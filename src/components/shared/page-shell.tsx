@@ -36,7 +36,8 @@ export function PageHeader({
           {description && <p className="mt-0.5 truncate text-sm text-muted-foreground">{description}</p>}
         </div>
       </div>
-      {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
+      {/* Wraps rather than overflows: on a phone, search, filters and the main action each take a line. */}
+      {children && <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">{children}</div>}
     </div>
   );
 }
@@ -54,7 +55,7 @@ export function SearchInput({
   className?: string;
 }) {
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative w-full sm:w-auto ${className}`}>
       <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         value={value}
