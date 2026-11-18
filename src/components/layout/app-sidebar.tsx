@@ -26,8 +26,10 @@ import {
   LayoutDashboard,
   Library,
   LogOut,
+  Package,
   Settings,
   Tags,
+  TicketPercent,
   Users,
   Users2,
 } from "lucide-react";
@@ -58,6 +60,13 @@ export const navGroups: { label: string; items: NavItem[] }[] = [
   {
     label: "People",
     items: [{ title: "Users", url: "/users", icon: Users }],
+  },
+  {
+    label: "Billing",
+    items: [
+      { title: "Plans", url: "/billing/products", icon: Package },
+      { title: "Coupons", url: "/billing/coupons", icon: TicketPercent },
+    ],
   },
   {
     // Below the daily work: the curriculum is set up once and rarely changes.

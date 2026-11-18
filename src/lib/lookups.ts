@@ -45,3 +45,18 @@ export const useAcademicGroups = () => useLookup<AcademicGroupLookup>("academic-
 export const useSubjects = () => useLookup<SubjectLookup>("subjects");
 export const useBatches = (includeRetired = false) =>
   useLookup<BatchLookup>("batches", { retirable: true, includeRetired });
+
+/** Plans for pickers: a product's title is its name, and its code stands in for the slug. */
+export function useProducts() {
+  return useQuery({
+    queryKey: ["lookup", "products", "all"],
+    queryFn: async () => {
+      const { data } = await api.get<Page<{ id: number; title: string; code: string; is_active: boolean }>>(
+        "/admin/products/",
+        { params: { page_size: 200 } },
+      );
+      return data.results.map((p) => ({ id: p.id, name: p.title, slug: p.code, is_active: p.is_active }));
+    },
+    staleTime: 60_000,
+  });
+}

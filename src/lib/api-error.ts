@@ -18,6 +18,12 @@ const FORM_WIDE = new Set(["non_field_errors", "__all__", "detail"]);
 /** problem+json members that describe the error rather than carry a message for a field. */
 const META = new Set(["type", "title", "status", "code", "instance"]);
 
+/**
+ * A problem+json member, as opposed to a field's errors. Fields can share these names (a coupon has a `code`),
+ * so only a bare value counts: DRF always sends a field's errors as a list.
+ */
+const isMeta = (field: string, value: unknown) => META.has(field) && !Array.isArray(value);
+
 const FALLBACK = "Something went wrong. Please try again.";
 
 function fieldLabel(field: string): string {
@@ -47,7 +53,7 @@ export function apiError(err: unknown): string {
   if (!data) return FALLBACK;
   if (typeof data.detail === "string") return data.detail;
   for (const [field, messages] of Object.entries(data)) {
-    if (META.has(field)) continue;
+    if (isMeta(field, messages)) continue;
     const first = Array.isArray(messages) ? messages.find((m) => typeof m === "string") : messages;
     if (typeof first !== "string") continue;
     return FORM_WIDE.has(field) ? first : `${fieldLabel(field)}: ${first}`;
@@ -71,7 +77,7 @@ export function fieldErrors(err: unknown): Record<string, string> {
       Object.entries(value).forEach(([inner, nested]) => walk(inner, nested));
   };
   Object.entries(body(err) ?? {}).forEach(([field, value]) => {
-    if (!FORM_WIDE.has(field) && !META.has(field)) walk(field, value as ErrorTree);
+    if (!FORM_WIDE.has(field) && !isMeta(field, value)) walk(field, value as ErrorTree);
   });
   return flat;
 }
