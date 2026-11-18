@@ -28,6 +28,7 @@ import {
   LayoutDashboard,
   Library,
   LogOut,
+  MessageSquareText,
   Package,
   Settings,
   Tags,
@@ -61,7 +62,10 @@ export const navGroups: { label: string; items: NavItem[] }[] = [
   },
   {
     label: "People",
-    items: [{ title: "Users", url: "/users", icon: Users }],
+    items: [
+      { title: "Users", url: "/users", icon: Users },
+      { title: "OTP log", url: "/otp-log", icon: MessageSquareText },
+    ],
   },
   {
     label: "Billing",

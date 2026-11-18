@@ -10,8 +10,8 @@ import { APPLE_STATUSES, PAYMENT_STATUSES, appleStatus, paymentStatus } from "@/
 import { useCrudList } from "@/hooks/use-crud-list";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
+import { DateRange } from "@/components/shared/date-range";
 import { LookupSelect } from "@/components/shared/lookup-select";
 import { EmptyState, PageHeader, SearchInput } from "@/components/shared/page-shell";
 import { RowActions } from "@/components/shared/row-actions";
@@ -45,39 +45,6 @@ function Purchase({ href, title, reference }: { href: string; title: string; ref
         {title}
       </Link>
       <p className="line-clamp-1 font-mono text-xs text-muted-foreground">{reference}</p>
-    </div>
-  );
-}
-
-/** Day-range inputs; the API takes `<field>__date__gte` and `__lte`. */
-function DateRange({
-  from,
-  to,
-  onChange,
-}: {
-  from: string;
-  to: string;
-  onChange: (range: { from: string; to: string }) => void;
-}) {
-  return (
-    <div className="flex items-center gap-1.5">
-      <Input
-        type="date"
-        aria-label="From date"
-        value={from}
-        max={to || undefined}
-        onChange={(e) => onChange({ from: e.target.value, to })}
-        className="h-9 w-40 bg-card"
-      />
-      <span className="text-sm text-muted-foreground">to</span>
-      <Input
-        type="date"
-        aria-label="To date"
-        value={to}
-        min={from || undefined}
-        onChange={(e) => onChange({ from, to: e.target.value })}
-        className="h-9 w-40 bg-card"
-      />
     </div>
   );
 }

@@ -41,6 +41,7 @@ const NAV_URLS: string[] = navGroups.flatMap((g) => g.items.map((i) => i.url));
 const TITLES: Record<string, string> = {
   dashboard: "Dashboard",
   settings: "Settings",
+  "otp-log": "OTP log",
 };
 
 /** Breadcrumb from the path, with numeric ids dropped. */
