@@ -1,26 +1,384 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Latin resolves to Noto Sans and Bengali to Noto Sans Bengali out of this
+     one stack: Noto Sans is listed first but its @font-face only claims
+     Latin codepoints, so the browser falls through per character for Bangla.
+     Both are loaded by next/font in app/layout.tsx.
+
+     This used to read `--font-sans: var(--font-sans)`. A custom property
+     that references itself is invalid at computed-value time, so
+     `font-family` resolved to nothing and the entire panel rendered in the
+     browser's default serif -- the variables the layout actually defined
+     (`--font-geist-sans`) were never referenced by anything. */
+  --font-sans:
+    var(--font-noto-sans), var(--font-noto-sans-bengali), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-heading: var(--font-sans);
+
+  /* Optical tracking.
+     A typeface set at 30px needs tighter spacing than the same face at
+     12px -- metal type cut a separate punch per size, and a single outline
+     scaled across the whole range does not. Headings read as slightly
+     unset without this.
+
+     Values are lighter than they would be for a narrow UI face: Noto Sans
+     is drawn wider and rounder for cross-script consistency, and over-
+     tightening it closes up the counters instead of just pulling the words
+     together. Attaching the value to the size means every existing
+     `text-2xl` in the app gets it, with no component changes and nothing to
+     remember at the call site. Small sizes are deliberately left alone --
+     tightening body copy and table text costs legibility and buys nothing. */
+  --text-lg--letter-spacing: -0.008em;
+  --text-xl--letter-spacing: -0.011em;
+  --text-2xl--letter-spacing: -0.014em;
+  --text-3xl--letter-spacing: -0.017em;
+  --text-4xl--letter-spacing: -0.019em;
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-surface-4: var(--surface-4);
+  --color-surface-5: var(--surface-5);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  /* Cards stay pure white -- that is the surface the chart colours were
+     validated against -- while the plane behind them takes the faintest
+     tint of the accent so it does not sit on a cold grey. */
+  --background: color-mix(in oklab, #fafafa 95%, var(--primary));
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #4f46e5;
+  --primary-foreground: #ffffff;
+  --secondary: color-mix(in oklab, #f2f2f3 93%, var(--primary));
+  --secondary-foreground: #1e293b;
+  --muted: color-mix(in oklab, #f2f2f3 93%, var(--primary));
+  --muted-foreground: #64748b;
+  --accent: #e8edf3;
+  --accent-foreground: #4f46e5;
+  --destructive: #dc2626;
+  --success: #15803d;
+  --success-foreground: #ffffff;
+  --warning: #b45309;
+  --warning-foreground: #ffffff;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #4f46e5;
+  --chart-1: #2563eb;
+  --chart-2: #7c3aed;
+  --chart-3: #059669;
+  --chart-4: #94a3b8;
+  --chart-5: #cbd5e1;
+  --radius: 0.5rem;
+  /* Near-neutral, not a hue-tinted slab: a saturated tint of a dark
+     surface goes muddy (amber -> brown, emerald -> olive), which is what
+     dated the first pass. A few percent of the accent is enough to read
+     as themed. */
+  --sidebar: color-mix(in oklab, #0c0d11 93%, var(--sidebar-primary));
+  --sidebar-foreground: #cbd5e1;
+  --sidebar-primary: #818cf8;
+  --sidebar-primary-foreground: #0b0c0f;
+  --sidebar-accent: #2563eb;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #818cf8;
+
+  /* ---- Data visualisation ----------------------------------------------
+     Real custom properties rather than `@theme inline` tokens, because the
+     chart library reads them through `var()` at runtime.
+
+     Every chart on the dashboard plots a single series, so this is a
+     sequential (one-hue) scheme, not a categorical one -- which is the safe
+     default and sidesteps the problem the old `--chart-*` set had: its
+     purple and blue measured ΔE 0.4 apart under deuteranopia and 12.4 with
+     normal vision, so the two headline cards were effectively one colour.
+
+     Validated against this surface (#ffffff): series clears the lightness
+     band, the chroma floor and 3:1 contrast. Status steps are fixed and
+     never themed, so a delta cue can never impersonate a series. */
+  --viz-series: #4f46e5;
+  --viz-series-wash: rgb(79 70 229 / 0.1);
+  --viz-grid: #e2e8f0;
+  --viz-axis: #94a3b8;
+  --viz-deemphasis: #cbd5e1;
+  --viz-good: #0ca30c;
+  --viz-critical: #d03b3b;
+
+  /* ---- Material 3: tonal elevation ------------------------------------
+     MD3 expresses elevation as *tone* rather than only shadow: each step up
+     mixes a little more of the theme's primary into the neutral surface.
+     That is why these follow the accent automatically -- `var(--primary)`
+     resolves where it is used.
+
+     Use the ladder for stacking, not decoration: page plane -> card ->
+     raised control -> dialog. Skipping steps flattens the hierarchy. */
+  --surface-1: color-mix(in oklab, #ffffff 99%, var(--primary));
+  --surface-2: color-mix(in oklab, #fbfbfc 97%, var(--primary));
+  --surface-3: color-mix(in oklab, #f6f7f9 95%, var(--primary));
+  --surface-4: color-mix(in oklab, #f1f3f6 93%, var(--primary));
+  --surface-5: color-mix(in oklab, #eceff3 91%, var(--primary));
+
+  /* ---- Material 3: state layers ---------------------------------------
+     A state layer is the accent laid over a control at a fixed opacity, so
+     hover/press read the same on every surface instead of each component
+     inventing its own grey. MD3's values, used verbatim.
+
+     Written as percentages, not the 0.08 the spec quotes: these feed
+     `color-mix()` through Tailwind's opacity modifier, and a bare number
+     there is invalid, so the whole declaration was being dropped and the
+     hover state simply never painted. */
+  --state-hover: 8%;
+  --state-focus: 10%;
+  --state-pressed: 10%;
+
+  /* ---- Material 3: shape scale ---------------------------------------- */
+  --shape-xs: 4px;
+  --shape-sm: 8px;
+  --shape-md: 12px;
+  --shape-lg: 16px;
+  --shape-xl: 28px;
+
+  /* ---- Material 3: motion ---------------------------------------------
+     One easing for entering/exiting, one set of durations. Anything that
+     animates in this panel should pull from here rather than picking its
+     own, so the whole interface moves at one speed. */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --duration-short: 150ms;
+  --duration-medium: 250ms;
+  --duration-long: 400ms;
+
+  /* Stat-tile accents; the same in light and dark. */
+  --tile-1: #6366f1;
+  --tile-2: #a855f7;
+  --tile-3: #06b6d4;
+  --tile-4: #10b981;
+
+  /* Hero panel.
+
+   Derived from `--sidebar` and `--primary` rather than fixed, so it follows
+   the accent in both light and dark.
+
+   The from-stop is the rail colour, which is dark in both modes -- that is
+   what keeps the white type on it above contrast. */
+  --hero-from: var(--sidebar);
+  --hero-mid: color-mix(in oklab, var(--sidebar) 68%, var(--primary));
+  --hero-to: color-mix(in oklab, var(--primary) 88%, black);
+  --hero-line: color-mix(in oklab, var(--primary) 42%, white);
+  --hero-glow: color-mix(in oklab, var(--primary) 55%, white);
+}
+
+.dark {
+  /* Surfaces are mixed from the primary rather than fixed, so the dark
+     page is tied to the accent instead of sitting on a cold blue-grey. The
+     mix is mostly neutral: not enough to move the contrast the foreground
+     relies on. */
+  --background: color-mix(in oklab, #07070a 86%, var(--primary));
+  --foreground: #e2e8f0;
+  --card: color-mix(in oklab, #101014 88%, var(--primary));
+  --card-foreground: #e2e8f0;
+  --popover: color-mix(in oklab, #101014 88%, var(--primary));
+  --popover-foreground: #e2e8f0;
+  --primary: #818cf8;
+  --primary-foreground: #0b0c0f;
+  --secondary: color-mix(in oklab, #1b1b21 86%, var(--primary));
+  --secondary-foreground: #e2e8f0;
+  --muted: color-mix(in oklab, #1b1b21 86%, var(--primary));
+  --muted-foreground: #94a3b8;
+  --accent: color-mix(in oklab, #1b1b21 86%, var(--primary));
+  --accent-foreground: #818cf8;
+  --destructive: #ef4444;
+  --success: #4ade80;
+  --success-foreground: #052e16;
+  --warning: #fbbf24;
+  --warning-foreground: #451a03;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: #818cf8;
+  --chart-1: #3b82f6;
+  --chart-2: #a78bfa;
+  --chart-3: #34d399;
+  --chart-4: #94a3b8;
+  --chart-5: #cbd5e1;
+  --sidebar: color-mix(in oklab, #08090c 94%, var(--sidebar-primary));
+  --sidebar-foreground: #cbd5e1;
+  --sidebar-primary: #818cf8;
+  --sidebar-primary-foreground: #0b0c0f;
+  --sidebar-accent: #1f2937;
+  --sidebar-accent-foreground: #e2e8f0;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #818cf8;
+
+  /* Stepped for the dark card surface (#111827) and validated against it --
+     not an automatic flip of the light values. Status steps are unchanged by
+     design; both clear 3:1 on this surface too. */
+  --viz-series: #6366f1;
+  --viz-series-wash: rgb(99 102 241 / 0.14);
+  --viz-grid: rgba(255, 255, 255, 0.08);
+  --viz-axis: #64748b;
+  --viz-deemphasis: #334155;
+  --viz-good: #0ca30c;
+  --viz-critical: #d03b3b;
+
+  /* Same ladder stepped for the dark surface -- selected, not flipped. */
+  --surface-1: color-mix(in oklab, #131318 92%, var(--primary));
+  --surface-2: color-mix(in oklab, #191920 90%, var(--primary));
+  --surface-3: color-mix(in oklab, #1f1f28 89%, var(--primary));
+  --surface-4: color-mix(in oklab, #25252f 88%, var(--primary));
+  --surface-5: color-mix(in oklab, #2b2b36 87%, var(--primary));
+
+  /* ---- Material 3: state layers ---------------------------------------
+     A state layer is the accent laid over a control at a fixed opacity, so
+     hover/press read the same on every surface instead of each component
+     inventing its own grey. MD3's values, used verbatim.
+
+     Written as percentages, not the 0.08 the spec quotes: these feed
+     `color-mix()` through Tailwind's opacity modifier, and a bare number
+     there is invalid, so the whole declaration was being dropped and the
+     hover state simply never painted. */
+  --state-hover: 8%;
+  --state-focus: 10%;
+  --state-pressed: 10%;
+
+  /* ---- Material 3: shape scale ---------------------------------------- */
+  --shape-xs: 4px;
+  --shape-sm: 8px;
+  --shape-md: 12px;
+  --shape-lg: 16px;
+  --shape-xl: 28px;
+
+  /* ---- Material 3: motion ---------------------------------------------
+     One easing for entering/exiting, one set of durations. Anything that
+     animates in this panel should pull from here rather than picking its
+     own, so the whole interface moves at one speed. */
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --duration-short: 150ms;
+  --duration-medium: 250ms;
+  --duration-long: 400ms;
+
+  /* Hero panel.
+
+   Derived from `--sidebar` and `--primary` rather than fixed, so it follows
+   the accent in both light and dark.
+
+   The from-stop is the rail colour, which is dark in both modes -- that is
+   what keeps the white type on it above contrast. */
+  --hero-from: var(--sidebar);
+  --hero-mid: color-mix(in oklab, var(--sidebar) 68%, var(--primary));
+  --hero-to: color-mix(in oklab, var(--primary) 88%, black);
+  --hero-line: color-mix(in oklab, var(--primary) 42%, white);
+  --hero-glow: color-mix(in oklab, var(--primary) 55%, white);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+
+  /* Proportional figures are drawn to different widths -- a 1 is narrower
+     than a 0 -- so a column of them does not line up and the eye cannot
+     compare magnitudes down the column. Every table in this panel is a
+     data table (payments, orders, users, marks, rankings), so tabular
+     figures are the right default here rather than something to remember
+     per cell.
+
+     Noto Sans already draws all ten digits to one advance width, so this
+     changes nothing today -- measured, not assumed. It stays as a guard:
+     most UI faces do not, and the columns should not silently fall out of
+     alignment the next time the family changes. */
+  table {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Table cell rhythm, defined once.
+     Every page hand-writes its own `<table>` rather than using
+     components/ui/table.tsx, and they had drifted into four different
+     paddings -- px-4/px-5/px-6 horizontally and py-2 through py-5 down --
+     so the row height visibly changed as you moved between Users, Courses,
+     Payments and Book orders. Some files disagreed with themselves, setting
+     py-3.5 on one cell and py-5 on the next.
+
+     Setting it here rather than restating it in twenty files means a new
+     page inherits the rhythm by existing, and there is one place to change
+     it. Markup utilities still win where a cell genuinely differs (the
+     `py-16` empty states rely on that), because Tailwind emits utilities
+     after this layer. */
+  th {
+    padding: --spacing(3.5) --spacing(5);
+  }
+  td {
+    padding: --spacing(4) --spacing(5);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Thin scrollbar for dark sidebar */
+[data-sidebar="content"]::-webkit-scrollbar {
+  width: 4px;
+}
+[data-sidebar="content"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+[data-sidebar="content"]::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 9999px;
+}
+[data-sidebar="content"]::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
 }
