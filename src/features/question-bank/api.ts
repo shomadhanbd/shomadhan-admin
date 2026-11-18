@@ -9,6 +9,7 @@ export const questionBlockKeys = {
 };
 
 export const questionBlocksApi = {
+  get: async (id: number) => (await api.get<QuestionBlock>(`${QUESTION_BLOCKS}${id}/`)).data,
   create: async (body: QuestionBlockBody) => (await api.post<QuestionBlock>(QUESTION_BLOCKS, body)).data,
   update: async (id: number, body: QuestionBlockBody) =>
     (await api.patch<QuestionBlock>(`${QUESTION_BLOCKS}${id}/`, body)).data,
