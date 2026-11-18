@@ -119,6 +119,12 @@
   --chart-3: #059669;
   --chart-4: #94a3b8;
   --chart-5: #cbd5e1;
+  /* Categorical series for multi-line charts, in fixed order. Checked for
+     colour-blind separation on the card surface in each mode. */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
   --radius: 0.5rem;
   /* Near-neutral, not a hue-tinted slab: a saturated tint of a dark
      surface goes muddy (amber -> brown, emerald -> olive), which is what
@@ -250,6 +256,10 @@
   --chart-3: #34d399;
   --chart-4: #94a3b8;
   --chart-5: #cbd5e1;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
   --sidebar: color-mix(in oklab, #08090c 94%, var(--sidebar-primary));
   --sidebar-foreground: #cbd5e1;
   --sidebar-primary: #818cf8;

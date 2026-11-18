@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, MessageSquareText, RefreshCw } from "lucide-react";
+import { AlertTriangle, MessageSquareText, RefreshCw, Siren } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { dateTime, money } from "@/lib/format";
 import { dashboardApi, dashboardKeys } from "@/features/dashboard/api";
@@ -16,7 +16,7 @@ const TONE = {
   empty: "bg-destructive/10 ring-destructive/40",
 };
 
-/** The OTP gateway's credit, loud when low: at ৳0 nobody can sign up or reset a password. */
+/** The OTP gateway's credit as a dashboard card, loud when low: at ৳0 nobody can sign up or reset a password. */
 export function SmsCreditCard() {
   const queryClient = useQueryClient();
   const balance = useQuery({
@@ -33,90 +33,86 @@ export function SmsCreditCard() {
     },
   });
 
-  if (balance.isLoading) return <Skeleton className="h-36 rounded-(--shape-md)" />;
+  if (balance.isLoading) return <Skeleton className="h-[104px] rounded-2xl" />;
 
   const b = balance.data;
   const notSent = otp.data?.not_sent ?? 0;
-  const level = b?.level ?? "unknown";
+  const level = b?.level;
   const alarming = level === "low" || level === "empty" || notSent > 0;
 
-  const headline = !b
-    ? "The SMS credit could not be read"
+  // What the number means: the state when it needs action, otherwise why it is missing.
+  const status = !b
+    ? "Could not be read"
     : level === "empty"
-      ? "SMS credit is used up. Students cannot get OTPs"
+      ? "Used up: students get no OTPs"
       : level === "low"
-        ? "SMS credit is low. Top up BulkSMSBD before students stop getting codes"
-        : !b.available
-          ? b.error.replace(/\.$/, "") || "SMS sending is off on this server"
-          : b.error
-            ? "The SMS credit could not be read"
-            : "SMS credit";
+        ? "Low: top up BulkSMSBD"
+        : b.error
+          ? b.error.replace(/\.$/, "")
+          : `Warns below ${money(b.warning_below)}`;
 
   return (
-    <section
+    <div
       aria-live="polite"
+      title={b?.checked_at && `Checked ${dateTime(b.checked_at)}`}
       className={cn(
-        "rounded-(--shape-md) p-5 shadow-sm ring-1",
+        "relative h-full overflow-hidden rounded-2xl p-4 shadow-sm ring-1",
         TONE[level === "empty" ? "empty" : alarming ? "low" : "ok"],
       )}
     >
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex min-w-0 items-start gap-3">
+      <div className="flex items-start justify-between gap-2">
+        <span className="truncate text-sm font-medium text-muted-foreground">SMS balance</span>
+        <div className="flex shrink-0 items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label="Check the SMS balance now"
+            title="Check now"
+            onClick={() => recheck.mutate()}
+            disabled={recheck.isPending}
+          >
+            <RefreshCw className={cn("h-3.5 w-3.5", recheck.isPending && "animate-spin")} />
+          </Button>
           <span
             className={cn(
-              "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
-              alarming ? "bg-destructive text-white" : "bg-primary/10 text-primary",
+              "flex h-7 w-7 items-center justify-center rounded-lg shadow-sm",
+              alarming ? "bg-destructive text-white" : "bg-primary text-primary-foreground",
             )}
           >
-            {alarming ? <AlertTriangle className="h-4 w-4" /> : <MessageSquareText className="h-4 w-4" />}
+            {level === "empty" ? (
+              <Siren className="h-4 w-4" />
+            ) : alarming ? (
+              <AlertTriangle className="h-4 w-4" />
+            ) : (
+              <MessageSquareText className="h-4 w-4" />
+            )}
           </span>
-          <div className="min-w-0">
-            <h2 className="text-sm font-semibold text-foreground">{headline}</h2>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              BulkSMSBD sends every OTP. {b?.available && `Warns below ${money(b.warning_below)}.`}
-            </p>
-          </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => recheck.mutate()} disabled={recheck.isPending}>
-          <RefreshCw className={cn("h-3.5 w-3.5", recheck.isPending && "animate-spin")} />
-          Check now
-        </Button>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-end gap-x-10 gap-y-3">
-        <div>
-          <p className="text-xs text-muted-foreground">Balance</p>
-          <p
-            className={cn(
-              "text-3xl leading-tight font-semibold tracking-tight",
-              level === "empty" ? "text-destructive" : "text-foreground",
-            )}
-          >
-            {b?.balance != null ? money(b.balance) : "—"}
-          </p>
-          {b?.available && b.error && <p className="text-xs text-destructive">{b.error}</p>}
-        </div>
-
-        <div>
-          <p className="text-xs text-muted-foreground">Codes not sent, last 24 hours</p>
-          <Link
-            href="/otp-log?status=not_sent"
-            className={cn(
-              "text-3xl leading-tight font-semibold tracking-tight hover:underline",
-              notSent ? "text-destructive" : "text-foreground",
-            )}
-          >
-            {notSent}
-          </Link>
-          {otp.data?.last_failure && (
-            <p className="text-xs text-muted-foreground">
-              Last: {otp.data.last_failure.reason}, {dateTime(otp.data.last_failure.at)}
-            </p>
-          )}
-        </div>
-
-        {b?.checked_at && <p className="ml-auto text-xs text-muted-foreground">Checked {dateTime(b.checked_at)}</p>}
-      </div>
-    </section>
+      <p
+        className={cn(
+          "mt-2 text-2xl leading-none font-semibold tracking-tight",
+          alarming && b?.balance != null ? "text-destructive" : "text-foreground",
+        )}
+      >
+        {b?.balance != null ? money(b.balance) : "—"}
+      </p>
+      <p
+        className={cn("mt-2 truncate text-xs", alarming ? "text-destructive" : "text-muted-foreground")}
+        title={status}
+      >
+        {status}
+      </p>
+      {notSent > 0 && (
+        <Link
+          href="/otp-log?status=not_sent"
+          className="mt-1 block truncate text-xs font-medium text-destructive hover:underline"
+          title={otp.data?.last_failure?.reason}
+        >
+          {notSent} {notSent === 1 ? "code" : "codes"} not sent in 24 hours
+        </Link>
+      )}
+    </div>
   );
 }
