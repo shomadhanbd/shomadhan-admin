@@ -25,13 +25,28 @@ const toDay = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.
 /** VIP lasts through the whole of its last day. */
 const endOfDay = (day: string) => new Date(`${day}T23:59:59`).toISOString();
 
-function monthsFromNow(months: number) {
-  const d = new Date();
-  d.setMonth(d.getMonth() + months);
+/** The same day `months` later, or that month's last day when it is shorter (31 Jan → 28 Feb). */
+function monthsAfter(start: Date, months: number) {
+  const d = new Date(start.getFullYear(), start.getMonth() + months, 1);
+  const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(start.getDate(), lastDay));
   return toDay(d);
 }
 
-export type Student = { id: number; name: string; mobile: string | null };
+export type Student = {
+  id: number;
+  name: string;
+  mobile: string | null;
+  /** When their current VIP ends, if they have VIP now. */
+  vipUntil: string | null;
+};
+
+/** The student's current VIP end, or null when they have none running. */
+const currentVip = (student: Student | null) =>
+  student?.vipUntil && new Date(student.vipUntil) > new Date() ? new Date(student.vipUntil) : null;
+
+/** A month past the student's current VIP, or past today when they have none. */
+const defaultUntil = (student: Student | null) => monthsAfter(currentVip(student) ?? new Date(), 1);
 
 /** Finds the student to grant VIP to, by name or mobile. */
 function StudentPicker({ student, onPick }: { student: Student | null; onPick: (s: Student | null) => void }) {
@@ -73,7 +88,14 @@ function StudentPicker({ student, onPick }: { student: Student | null; onPick: (
               <button
                 type="button"
                 className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left hover:bg-surface-2"
-                onClick={() => onPick({ id: u.id, name: u.full_name, mobile: u.mobile })}
+                onClick={() =>
+                  onPick({
+                    id: u.id,
+                    name: u.full_name,
+                    mobile: u.mobile,
+                    vipUntil: u.has_active_subscription ? u.subscription_expires_at : null,
+                  })
+                }
               >
                 <span className="line-clamp-1 text-sm text-foreground">{u.full_name || u.mobile}</span>
                 <span className="shrink-0 text-xs text-muted-foreground">
@@ -104,7 +126,16 @@ export function GrantDialog({
   const products = useProducts();
   const [student, setStudent] = useState<Student | null>(preset ?? null);
   const [product, setProduct] = useState("");
-  const [until, setUntil] = useState(monthsFromNow(1));
+  const [until, setUntil] = useState(defaultUntil(preset ?? null));
+
+  // A grant runs from today, so for a student already on VIP it only adds time if it ends later.
+  const vipEnds = currentVip(student);
+  const earliest = vipEnds ? toDay(new Date(vipEnds.getTime() + 86_400_000)) : toDay(new Date());
+
+  function pickStudent(picked: Student | null) {
+    setStudent(picked);
+    setUntil(defaultUntil(picked));
+  }
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -134,7 +165,7 @@ export function GrantDialog({
       description="Gives a student VIP without a payment, for example after they paid outside the app."
       submitLabel="Grant VIP"
       pending={save.isPending}
-      canSubmit={Boolean(student && product && until && note.trim())}
+      canSubmit={Boolean(student && product && until && until >= earliest && note.trim())}
       error={error}
       onSubmit={() => {
         setError(null);
@@ -148,9 +179,16 @@ export function GrantDialog({
             {preset.name && <span className="text-muted-foreground"> · {preset.mobile}</span>}
           </p>
         ) : (
-          <StudentPicker student={student} onPick={setStudent} />
+          <StudentPicker student={student} onPick={pickStudent} />
         )}
       </Field>
+
+      {vipEnds && (
+        <p className="rounded-(--shape-sm) bg-warning/10 px-3 py-2 text-sm text-foreground">
+          Already VIP until <span className="font-medium">{date(vipEnds.toISOString())}</span>. This grant adds the time
+          after that. To change the current one instead, use Subscriptions.
+        </p>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field id="grant-plan" label="Plan" required hint="What the grant stands for.">
@@ -163,14 +201,17 @@ export function GrantDialog({
             className="w-full"
           />
         </Field>
-        <Field id="grant-until" label="VIP until" required hint="Through the end of this day.">
-          <Input
-            id="grant-until"
-            type="date"
-            min={toDay(new Date())}
-            value={until}
-            onChange={(e) => setUntil(e.target.value)}
-          />
+        <Field
+          id="grant-until"
+          label="VIP until"
+          required
+          hint={
+            vipEnds
+              ? `Later than ${date(vipEnds.toISOString())}, when their current VIP ends.`
+              : "Through the end of this day."
+          }
+        >
+          <Input id="grant-until" type="date" min={earliest} value={until} onChange={(e) => setUntil(e.target.value)} />
         </Field>
       </div>
 

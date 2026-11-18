@@ -404,7 +404,7 @@ export function UserDetailPage({ params }: { params: Promise<{ id: string }> }) 
 
       {granting && (
         <GrantDialog
-          student={{ id: user.id, name: user.full_name, mobile: user.mobile }}
+          student={{ id: user.id, name: user.full_name, mobile: user.mobile, vipUntil: user.subscription_expires_at }}
           onOpenChange={(o) => !o && setGranting(false)}
         />
       )}
