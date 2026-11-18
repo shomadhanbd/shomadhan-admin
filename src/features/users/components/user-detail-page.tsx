@@ -6,6 +6,7 @@ import { CircleCheck, ClipboardList, Flame, ListChecks, UserX, Users } from "luc
 import { toast } from "sonner";
 import { date, dateTime } from "@/lib/format";
 import { useAcademicGroups, useBatches, useEducationLevels } from "@/lib/lookups";
+import { getUser } from "@/lib/session";
 import { StatTile } from "@/features/dashboard/components/stat-tile";
 import { GrantDialog } from "@/features/subscriptions/components/subscription-dialogs";
 import { subscriptionSource } from "@/features/subscriptions/constants";
@@ -268,10 +269,14 @@ export function UserDetailPage({ params }: { params: Promise<{ id: string }> }) 
         {user.has_active_subscription ? <Badge>VIP</Badge> : <Badge variant="outline">Free</Badge>}
         {!user.is_active && <Badge variant="outline">Deactivated</Badge>}
         {user.is_staff && <Badge variant="secondary">Staff</Badge>}
-        <Button size="lg" variant="outline" onClick={() => setConfirmingStatus(true)}>
-          {user.is_active ? <UserX className="h-4 w-4" /> : <CircleCheck className="h-4 w-4" />}
-          {user.is_active ? "Deactivate" : "Reactivate"}
-        </Button>
+        {/* Not on your own account: the API refuses it, since it would lock you out. Pages mount only
+            once signed in, so the stored user can be read directly. */}
+        {getUser()?.id !== user.id && (
+          <Button size="lg" variant="outline" onClick={() => setConfirmingStatus(true)}>
+            {user.is_active ? <UserX className="h-4 w-4" /> : <CircleCheck className="h-4 w-4" />}
+            {user.is_active ? "Deactivate" : "Reactivate"}
+          </Button>
+        )}
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
