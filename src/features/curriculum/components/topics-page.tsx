@@ -8,6 +8,7 @@ import { apiError } from "@/lib/api-error";
 import { useSubjects } from "@/lib/lookups";
 import { TOPICS, chaptersApi, curriculumKeys, topicsApi } from "@/features/curriculum/api";
 import { useCrudList } from "@/hooks/use-crud-list";
+import { useUrlState } from "@/hooks/use-url-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
@@ -128,7 +129,7 @@ function TopicDialog({
 
 export function TopicsPage() {
   const subjects = useSubjects();
-  const [subject, setSubject] = useState("");
+  const [subject, setSubject] = useUrlState("subject");
   const [editing, setEditing] = useState<Topic | null | "new">(null);
 
   const { rows, isLoading, isFetching, search, onSearch, setPage, deleting, setDeleting, remove, pagination } =

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useLogout } from "@/features/auth/hooks/use-auth";
 import { isAuthenticated } from "@/lib/session";
@@ -37,7 +37,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Responsive padding; not keyed on the path, so shared layouts stay mounted between pages. */}
         <div id="main-content" tabIndex={-1} className="flex-1 p-4 focus:outline-none sm:p-6 lg:p-8">
           {/* Mounted only once someone is signed in, so a page about to redirect fires no requests. */}
-          {signedIn ? children : null}
+          {/* Pages read their filters from the address, which only the browser knows: Suspense lets them. */}
+          <Suspense fallback={null}>{signedIn ? children : null}</Suspense>
         </div>
       </SidebarInset>
       <LeaveGuard />

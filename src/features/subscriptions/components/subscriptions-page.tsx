@@ -12,6 +12,7 @@ import {
   subscriptionStatus,
 } from "@/features/subscriptions/constants";
 import { useCrudList } from "@/hooks/use-crud-list";
+import { useUrlState } from "@/hooks/use-url-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
@@ -48,8 +49,8 @@ function Source({ subscription: s }: { subscription: Subscription }) {
 
 /** `/billing/subscriptions`: who has VIP and until when, with granting, extending and revoking by hand. */
 export function SubscriptionsPage() {
-  const [status, setStatus] = useState("active");
-  const [source, setSource] = useState("");
+  const [status, setStatus] = useUrlState("status", "active");
+  const [source, setSource] = useUrlState("source");
   const [editing, setEditing] = useState<Subscription | null>(null);
   const [granting, setGranting] = useState(false);
 

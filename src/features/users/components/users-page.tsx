@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import { Users } from "lucide-react";
 import { date } from "@/lib/format";
 import { useAcademicGroups, useEducationLevels } from "@/lib/lookups";
 import { USERS, userKeys } from "@/features/users/api";
 import { useCrudList } from "@/hooks/use-crud-list";
+import { useUrlState } from "@/hooks/use-url-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
@@ -32,9 +33,9 @@ export function displayName(user: Pick<User, "full_name" | "mobile">): string {
 export function UsersPage() {
   const levels = useEducationLevels();
   const groups = useAcademicGroups();
-  const [level, setLevel] = useState("");
-  const [group, setGroup] = useState("");
-  const [status, setStatus] = useState("");
+  const [level, setLevel] = useUrlState("level");
+  const [group, setGroup] = useUrlState("group");
+  const [status, setStatus] = useUrlState("status");
 
   const groupOptions = useMemo(
     () => (level ? groups.data?.filter((g) => String(g.education_level) === level) : groups.data),

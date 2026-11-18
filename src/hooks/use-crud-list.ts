@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import api, { cleanParams } from "@/lib/api";
 import { stepBackIfEmptied } from "@/lib/utils";
 import { useDebounce } from "./use-debounce";
+import { useUrlNumber, useUrlState } from "./use-url-state";
 import type { Page, Params } from "@/types/api";
 
 interface CrudListOptions<T> {
@@ -22,6 +23,11 @@ interface CrudListOptions<T> {
   pageSize?: number;
   /** False holds the query back, e.g. until a required filter is chosen. */
   enabled?: boolean;
+  /**
+   * Keep the page, page size and search in the page's address (`?page=2&q=…`), so coming back
+   * restores the list. False for a list inside a dialog, which must not touch the address.
+   */
+  inUrl?: boolean;
 }
 
 /** Search, paging, the list query and delete for a paginated admin table. */
@@ -33,13 +39,22 @@ export function useCrudList<T extends { id: number | string }>({
   onDeleted,
   pageSize: initialPageSize = 25,
   enabled = true,
+  inUrl = true,
 }: CrudListOptions<T>) {
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(initialPageSize);
-  const [deleting, setDeleting] = useState<T | null>(null);
+  const [page, setPage] = useUrlNumber("page", 1, inUrl);
+  const [pageSize, setPageSize] = useUrlNumber("size", initialPageSize, inUrl);
+  const [urlSearch, setUrlSearch] = useUrlState("q", "", inUrl);
+  // The box follows every keystroke; the address and the query only the settled text.
+  const [search, setSearch] = useState(urlSearch);
   const debouncedSearch = useDebounce(search, 400);
+  const [deleting, setDeleting] = useState<T | null>(null);
+
+  useEffect(() => {
+    if (debouncedSearch !== urlSearch) setUrlSearch(debouncedSearch);
+    // Only the settled text drives the write; `urlSearch` catching up must not echo back.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
 
   const query = useQuery({
     queryKey: [key, path, page, pageSize, debouncedSearch, params],
@@ -78,10 +93,13 @@ export function useCrudList<T extends { id: number | string }>({
     onSettled: () => setDeleting(null),
   });
 
-  const onSearch = useCallback((value: string) => {
-    setSearch(value);
-    setPage(1);
-  }, []);
+  const onSearch = useCallback(
+    (value: string) => {
+      setSearch(value);
+      setPage(1);
+    },
+    [setPage],
+  );
 
   return {
     rows,

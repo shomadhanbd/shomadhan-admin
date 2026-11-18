@@ -1,6 +1,5 @@
 "use client";
 
-import { use, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Lock, MessageSquareOff, MessageSquareText, ShieldCheck } from "lucide-react";
@@ -9,6 +8,7 @@ import { OTP_REQUESTS, otpApi, otpKeys } from "@/features/otp-log/api";
 import { OTP_STATUSES, otpStatus } from "@/features/otp-log/constants";
 import { StatTile } from "@/features/dashboard/components/stat-tile";
 import { useCrudList } from "@/hooks/use-crud-list";
+import { useUrlRange, useUrlState } from "@/hooks/use-url-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
@@ -18,11 +18,10 @@ import { EmptyState, PageHeader, SearchInput } from "@/components/shared/page-sh
 import type { OtpRequest } from "@/features/otp-log/types";
 
 /** `/otp-log`: every OTP SMS sent, for spotting abuse, SMS spend and students stuck at sign-in. Read-only. */
-export function OtpLogPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
+export function OtpLogPage() {
   // The dashboard links here as `?status=not_sent`.
-  const initial = use(searchParams).status;
-  const [status, setStatus] = useState(OTP_STATUSES.some((s) => s.id === initial) ? initial! : "");
-  const [range, setRange] = useState({ from: "", to: "" });
+  const [status, setStatus] = useUrlState("status");
+  const [range, setRange] = useUrlRange();
 
   const summary = useQuery({ queryKey: otpKeys.summary, queryFn: otpApi.summary, refetchInterval: 60_000 });
   const list = useCrudList<OtpRequest>({

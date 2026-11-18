@@ -8,6 +8,7 @@ import { apiError } from "@/lib/api-error";
 import { useEducationLevels } from "@/lib/lookups";
 import { ACADEMIC_GROUPS, academicGroupsApi, curriculumKeys } from "@/features/curriculum/api";
 import { useCrudList } from "@/hooks/use-crud-list";
+import { useUrlState } from "@/hooks/use-url-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
@@ -103,7 +104,7 @@ function AcademicGroupDialog({
 export function AcademicGroupsPage() {
   const queryClient = useQueryClient();
   const levels = useEducationLevels();
-  const [level, setLevel] = useState("");
+  const [level, setLevel] = useUrlState("level");
   const [editing, setEditing] = useState<AcademicGroup | null | "new">(null);
 
   const { rows, isLoading, isFetching, search, onSearch, setPage, deleting, setDeleting, remove, pagination } =

@@ -11,6 +11,7 @@ import { MOCK_TESTS, mockTestKeys, mockTestsApi } from "@/features/mock-tests/ap
 import { MOCK_TEST_STATUSES, MOCK_TEST_STATUS_LABELS } from "@/features/mock-tests/constants";
 import { marksLabel } from "@/features/mock-tests/mock-test-draft";
 import { useCrudList } from "@/hooks/use-crud-list";
+import { useUrlState } from "@/hooks/use-url-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -23,7 +24,7 @@ import type { MockTest } from "@/features/mock-tests/types";
 
 export function MockTestsPage() {
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useUrlState("status");
   const router = useRouter();
   /** The test whose published switch was flicked, while the admin confirms. */
   const [toggling, setToggling] = useState<MockTest | null>(null);

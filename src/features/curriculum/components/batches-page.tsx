@@ -8,6 +8,7 @@ import { apiError } from "@/lib/api-error";
 import { useEducationLevels } from "@/lib/lookups";
 import { BATCHES, batchesApi, curriculumKeys } from "@/features/curriculum/api";
 import { useCrudList } from "@/hooks/use-crud-list";
+import { useUrlState } from "@/hooks/use-url-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,7 +97,7 @@ function BatchDialog({ batch, onOpenChange }: { batch: Batch | null; onOpenChang
 export function BatchesPage() {
   const queryClient = useQueryClient();
   const levels = useEducationLevels();
-  const [level, setLevel] = useState("");
+  const [level, setLevel] = useUrlState("level");
   const [editing, setEditing] = useState<Batch | null | "new">(null);
 
   const { rows, isLoading, isFetching, search, onSearch, setPage, deleting, setDeleting, remove, pagination } =

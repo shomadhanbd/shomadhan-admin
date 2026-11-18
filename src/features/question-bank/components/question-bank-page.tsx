@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -12,6 +11,7 @@ import { chaptersApi, curriculumKeys } from "@/features/curriculum/api";
 import { QUESTION_BLOCKS, questionBlockKeys } from "@/features/question-bank/api";
 import { QUESTION_TYPES, QUESTION_TYPE_LABELS } from "@/features/question-bank/constants";
 import { useCrudList } from "@/hooks/use-crud-list";
+import { useUrlState } from "@/hooks/use-url-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
@@ -30,9 +30,9 @@ function preview(block: QuestionBlock): string {
 export function QuestionBankPage() {
   const queryClient = useQueryClient();
   const subjects = useSubjects();
-  const [subject, setSubject] = useState("");
-  const [chapter, setChapter] = useState("");
-  const [type, setType] = useState("");
+  const [subject, setSubject] = useUrlState("subject");
+  const [chapter, setChapter] = useUrlState("chapter");
+  const [type, setType] = useUrlState("type");
   const router = useRouter();
 
   const chapters = useQuery({

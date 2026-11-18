@@ -8,6 +8,7 @@ import { apiError } from "@/lib/api-error";
 import { useAcademicGroups, useEducationLevels } from "@/lib/lookups";
 import { SUBJECTS, curriculumKeys, subjectsApi } from "@/features/curriculum/api";
 import { useCrudList } from "@/hooks/use-crud-list";
+import { useUrlState } from "@/hooks/use-url-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
@@ -126,8 +127,8 @@ function SubjectDialog({ subject, onOpenChange }: { subject: Subject | null; onO
 export function SubjectsPage() {
   const queryClient = useQueryClient();
   const levels = useEducationLevels();
-  const [level, setLevel] = useState("");
-  const [group, setGroup] = useState("");
+  const [level, setLevel] = useUrlState("level");
+  const [group, setGroup] = useUrlState("group");
   const [editing, setEditing] = useState<Subject | null | "new">(null);
   const groups = useGroupsOf(level);
 

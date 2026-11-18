@@ -8,6 +8,7 @@ import { apiError } from "@/lib/api-error";
 import { useSubjects } from "@/lib/lookups";
 import { CHAPTERS, chaptersApi, curriculumKeys } from "@/features/curriculum/api";
 import { useCrudList } from "@/hooks/use-crud-list";
+import { useUrlState } from "@/hooks/use-url-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -134,7 +135,7 @@ function ChapterDialog({
 export function ChaptersPage() {
   const queryClient = useQueryClient();
   const subjects = useSubjects();
-  const [subject, setSubject] = useState("");
+  const [subject, setSubject] = useUrlState("subject");
   const [editing, setEditing] = useState<Chapter | null | "new">(null);
 
   const { rows, isLoading, isFetching, search, onSearch, setPage, deleting, setDeleting, remove, pagination } =

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -8,6 +7,7 @@ import { dateTime, money } from "@/lib/format";
 import { APPLE_TRANSACTIONS, PAYMENTS, paymentKeys } from "@/features/payments/api";
 import { APPLE_STATUSES, PAYMENT_STATUSES, appleStatus, paymentStatus } from "@/features/payments/constants";
 import { useCrudList } from "@/hooks/use-crud-list";
+import { useUrlRange, useUrlState } from "@/hooks/use-url-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
@@ -196,9 +196,10 @@ function AppleTable({ list, filtered }: { list: List<AppleTransaction>; filtered
 
 /** `/billing/payments`: every payment attempt, from SSLCommerz or the App Store. Read-only. */
 export function PaymentsPage() {
-  const [source, setSource] = useState<Source>("sslcommerz");
-  const [status, setStatus] = useState("");
-  const [range, setRange] = useState({ from: "", to: "" });
+  const [sourceParam, setSource] = useUrlState("source", "sslcommerz");
+  const source: Source = sourceParam === "apple" ? "apple" : "sslcommerz";
+  const [status, setStatus] = useUrlState("status");
+  const [range, setRange] = useUrlRange();
   const statuses = source === "apple" ? APPLE_STATUSES : PAYMENT_STATUSES;
 
   // One list per source, each fetching only while its tab is showing.

@@ -9,6 +9,7 @@ import { date, money, toLocalInput } from "@/lib/format";
 import { useProducts } from "@/lib/lookups";
 import { COUPONS, couponKeys, couponsApi } from "@/features/coupons/api";
 import { useCrudList } from "@/hooks/use-crud-list";
+import { useUrlState } from "@/hooks/use-url-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -163,7 +164,7 @@ function CouponDialog({ coupon, onOpenChange }: { coupon: Coupon | null; onOpenC
 
 export function CouponsPage() {
   const products = useProducts();
-  const [active, setActive] = useState("");
+  const [active, setActive] = useUrlState("active");
   const [editing, setEditing] = useState<Coupon | null | "new">(null);
 
   const { rows, isLoading, isFetching, search, onSearch, setPage, deleting, setDeleting, remove, pagination } =

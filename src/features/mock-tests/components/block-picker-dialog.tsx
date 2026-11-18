@@ -50,6 +50,8 @@ export function BlockPickerDialog({
     params: { subject, chapter, question_type: type },
     pageSize: 10,
     enabled: Boolean(subject),
+    // A dialog over the form: its paging must not rewrite the page's address.
+    inUrl: false,
   });
 
   const selectedIds = new Set(selected.map((b) => b.id));

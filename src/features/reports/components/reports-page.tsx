@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, Flag, Pencil, RotateCcw, Trash2, X } from "lucide-react";
@@ -10,6 +9,7 @@ import { QUESTION_TYPE_LABELS } from "@/features/question-bank/constants";
 import { REPORTS, reportKeys, reportsApi } from "@/features/reports/api";
 import { REPORT_REASONS, REPORT_REASON_LABELS, REPORT_STATUSES } from "@/features/reports/constants";
 import { useCrudList } from "@/hooks/use-crud-list";
+import { useUrlState } from "@/hooks/use-url-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
@@ -29,8 +29,8 @@ const STATUS_TOAST: Record<ReportStatus, string> = {
 export function ReportsPage() {
   const queryClient = useQueryClient();
   // The queue opens on what still needs attention.
-  const [status, setStatus] = useState("open");
-  const [reason, setReason] = useState("");
+  const [status, setStatus] = useUrlState("status", "open");
+  const [reason, setReason] = useUrlState("reason");
   const router = useRouter();
 
   const { rows, isLoading, isFetching, search, onSearch, setPage, deleting, setDeleting, remove, pagination } =
