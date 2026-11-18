@@ -144,6 +144,8 @@ function PlacementCard({ user, save }: { user: UserDetail; save: ReturnType<type
       }
       pending={save.pending}
       error={save.error}
+      // A level without a group would leave the student half placed: the app filters by both.
+      canSave={!level || Boolean(group)}
       form={
         <>
           <Field id="user-level" label="Education level" error={save.errors.education_level}>
@@ -162,7 +164,13 @@ function PlacementCard({ user, save }: { user: UserDetail; save: ReturnType<type
             />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field id="user-group" label="Academic group" error={save.errors.academic_group}>
+            <Field
+              id="user-group"
+              label="Academic group"
+              required={Boolean(level)}
+              hint={level && !group ? "Pick a group to save." : undefined}
+              error={save.errors.academic_group}
+            >
               <LookupSelect
                 id="user-group"
                 value={group}

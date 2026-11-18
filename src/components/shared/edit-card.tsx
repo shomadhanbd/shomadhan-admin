@@ -14,6 +14,7 @@ export function EditCard({
   onSave,
   pending,
   error,
+  canSave = true,
   readOnly = false,
 }: {
   title: string;
@@ -26,6 +27,8 @@ export function EditCard({
   pending?: boolean;
   /** A failure not tied to one field. */
   error?: string | null;
+  /** False while the draft is incomplete; a field's hint should say what is missing. */
+  canSave?: boolean;
   readOnly?: boolean;
 }) {
   const [editing, setEditing] = useState(false);
@@ -57,7 +60,7 @@ export function EditCard({
         <form
           onSubmit={async (e) => {
             e.preventDefault();
-            if (pending) return;
+            if (pending || !canSave) return;
             if (await onSave()) setEditing(false);
           }}
         >
@@ -77,7 +80,7 @@ export function EditCard({
             <Button type="button" variant="outline" onClick={() => setEditing(false)} disabled={pending}>
               Cancel
             </Button>
-            <Button type="submit" disabled={pending}>
+            <Button type="submit" disabled={pending || !canSave}>
               {pending ? "Saving…" : "Save"}
             </Button>
           </div>
