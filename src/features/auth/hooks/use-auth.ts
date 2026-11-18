@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { authApi } from "@/features/auth/api";
 import { setAuth, clearAuth } from "@/lib/session";
+import { whenSafeToLeave } from "@/hooks/use-leave-warning";
 import type { LoginCredentials } from "@/features/auth/types";
 
 export const NOT_ADMIN = "This account does not have admin access.";
@@ -35,9 +36,13 @@ export function useLogout() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  return useCallback(() => {
-    clearAuth();
-    queryClient.clear();
-    router.push("/login");
-  }, [queryClient, router]);
+  return useCallback(
+    () =>
+      whenSafeToLeave(() => {
+        clearAuth();
+        queryClient.clear();
+        router.push("/login");
+      }),
+    [queryClient, router],
+  );
 }

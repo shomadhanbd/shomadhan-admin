@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CornerDownLeft, Search } from "lucide-react";
 import { navGroups } from "./app-sidebar";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { whenSafeToLeave } from "@/hooks/use-leave-warning";
 
 interface Result {
   id: string;
@@ -55,7 +56,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
   function go(r: Result | undefined) {
     if (!r) return;
     close();
-    router.push(r.href);
+    whenSafeToLeave(() => router.push(r.href));
   }
 
   function onKeyDown(e: React.KeyboardEvent) {

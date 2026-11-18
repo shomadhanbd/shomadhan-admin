@@ -8,6 +8,7 @@ import { useHydrated } from "@/hooks/use-hydrated";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { TopHeader } from "@/components/layout/top-header";
+import { LeaveGuard } from "@/components/layout/leave-guard";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -39,6 +40,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {signedIn ? children : null}
         </div>
       </SidebarInset>
+      <LeaveGuard />
     </SidebarProvider>
   );
 }
