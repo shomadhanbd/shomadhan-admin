@@ -107,7 +107,8 @@ export function MockTestForm({ test, cancelHref }: { test: MockTestDetail | null
       queryClient.setQueryData([...mockTestKeys.all, "detail", saved.id], saved);
       queryClient.invalidateQueries({ queryKey: mockTestKeys.all });
       toast.success(isEdit ? "Mock test updated" : "Mock test added");
-      router.push(`/mock-tests/${saved.id}`);
+      // Replace, not push: Back from the saved record must not reopen the form it was saved from.
+      router.replace(`/mock-tests/${saved.id}`);
     },
     onError: (err) => setError(apiError(err)),
   });

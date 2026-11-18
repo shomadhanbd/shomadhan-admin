@@ -98,7 +98,8 @@ export function QuestionBlockForm({
         queryClient.invalidateQueries({ queryKey: curriculumKeys[key].all });
       }
       toast.success(isEdit ? "Question updated" : "Question added");
-      router.push(`/question-bank/${saved.id}`);
+      // Replace, not push: Back from the saved record must not reopen the form it was saved from.
+      router.replace(`/question-bank/${saved.id}`);
     },
     onError: (err) => setError(apiError(err)),
   });
