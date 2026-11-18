@@ -104,7 +104,7 @@ export function PaymentDetailPage({ params }: { params: Promise<{ id: string }> 
                   : "None"}
               </ViewRow>
               <ViewRow label="Charged">{money(payment.amount)}</ViewRow>
-              <ViewRow label="Started">{dateTime(payment.created_at)}</ViewRow>
+              <ViewRow label="Checkout opened">{dateTime(payment.created_at)}</ViewRow>
               <ViewRow label="Completed">{dateTime(payment.transaction_date)}</ViewRow>
               <ViewRow label="Card">
                 {[payment.card_type, payment.card_issuer_country].filter(Boolean).join(" · ") || <Empty />}

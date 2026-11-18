@@ -24,15 +24,27 @@ const SOURCES: { id: Source; name: string }[] = [
   { id: "apple", name: "App Store" },
 ];
 
-/** Who paid: their name with the mobile under it, linked to their user page. */
+/** Who paid, as each table's first column: their name over their mobile, linked to their user page. */
 function Payer({ id, name, mobile }: { id: number | null; name: string; mobile: string | null }) {
   if (!id) return <span className="text-sm text-muted-foreground">Deleted account</span>;
   return (
     <div className="min-w-0">
-      <Link href={`/users/${id}`} className="line-clamp-1 text-sm text-foreground hover:text-primary">
+      <Link href={`/users/${id}`} className="line-clamp-1 font-medium text-foreground hover:text-primary">
         {name || mobile}
       </Link>
       {name && <p className="line-clamp-1 text-xs text-muted-foreground">{mobile}</p>}
+    </div>
+  );
+}
+
+/** A plan with its transaction id under it, linked to the payment's page. */
+function Purchase({ href, title, reference }: { href: string; title: string; reference: string }) {
+  return (
+    <div className="min-w-0">
+      <Link href={href} className="line-clamp-1 text-sm text-foreground hover:text-primary">
+        {title}
+      </Link>
+      <p className="line-clamp-1 font-mono text-xs text-muted-foreground">{reference}</p>
     </div>
   );
 }
@@ -75,26 +87,15 @@ type List<T> = ReturnType<typeof useCrudList<T & { id: number }>>;
 function SslcommerzTable({ list, filtered }: { list: List<Payment>; filtered: boolean }) {
   const columns: Column<Payment>[] = [
     {
-      key: "payment",
-      header: "Payment",
-      cell: (p) => (
-        <div className="min-w-0">
-          <Link
-            href={`/billing/payments/${p.id}`}
-            className="line-clamp-1 font-medium text-foreground hover:text-primary"
-          >
-            {p.product_title}
-          </Link>
-          <p className="line-clamp-1 font-mono text-xs text-muted-foreground">{p.transaction_id}</p>
-        </div>
-      ),
+      key: "student",
+      header: "Student",
+      cell: (p) => <Payer id={p.user} name={p.user_name} mobile={p.user_mobile} />,
     },
     {
-      key: "payer",
-      header: "Paid by",
-      secondary: true,
-      width: "180px",
-      cell: (p) => <Payer id={p.user} name={p.user_name} mobile={p.user_mobile} />,
+      key: "plan",
+      header: "Plan",
+      width: "220px",
+      cell: (p) => <Purchase href={`/billing/payments/${p.id}`} title={p.product_title} reference={p.transaction_id} />,
     },
     {
       key: "amount",
@@ -158,26 +159,21 @@ function SslcommerzTable({ list, filtered }: { list: List<Payment>; filtered: bo
 function AppleTable({ list, filtered }: { list: List<AppleTransaction>; filtered: boolean }) {
   const columns: Column<AppleTransaction>[] = [
     {
-      key: "purchase",
-      header: "Purchase",
-      cell: (t) => (
-        <div className="min-w-0">
-          <Link
-            href={`/billing/payments/apple/${t.id}`}
-            className="line-clamp-1 font-medium text-foreground hover:text-primary"
-          >
-            {t.product_title ?? t.apple_product_id}
-          </Link>
-          <p className="line-clamp-1 font-mono text-xs text-muted-foreground">{t.original_transaction_id}</p>
-        </div>
-      ),
+      key: "student",
+      header: "Student",
+      cell: (t) => <Payer id={t.user} name={t.user_name} mobile={t.user_mobile} />,
     },
     {
-      key: "payer",
-      header: "Paid by",
-      secondary: true,
-      width: "180px",
-      cell: (t) => <Payer id={t.user} name={t.user_name} mobile={t.user_mobile} />,
+      key: "plan",
+      header: "Plan",
+      width: "220px",
+      cell: (t) => (
+        <Purchase
+          href={`/billing/payments/apple/${t.id}`}
+          title={t.product_title ?? t.apple_product_id}
+          reference={t.original_transaction_id}
+        />
+      ),
     },
     {
       key: "status",

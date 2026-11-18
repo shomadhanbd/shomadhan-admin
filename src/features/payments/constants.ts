@@ -4,7 +4,8 @@ type Variant = "default" | "secondary" | "outline" | "destructive";
 
 export const PAYMENT_STATUSES: { id: PaymentStatus; name: string; variant: Variant }[] = [
   { id: "VALID", name: "Paid", variant: "default" },
-  { id: "INITIATED", name: "Started", variant: "secondary" },
+  // Checkout opened but no result came back: almost always abandoned, occasionally still in progress.
+  { id: "INITIATED", name: "Not completed", variant: "secondary" },
   { id: "FAILED", name: "Failed", variant: "destructive" },
   { id: "CANCELLED", name: "Cancelled", variant: "outline" },
   { id: "EXPIRED", name: "Expired", variant: "outline" },
