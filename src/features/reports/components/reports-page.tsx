@@ -67,7 +67,7 @@ export function ReportsPage() {
         <div className="max-w-sm min-w-0">
           <RichContent content={plainText(r.question_prompt)} className="truncate font-medium" />
           <p className="truncate text-xs text-muted-foreground">
-            {r.question_slug} · {QUESTION_TYPE_LABELS[r.question_type]}
+            {r.block_slug} · {QUESTION_TYPE_LABELS[r.question_type]}
           </p>
         </div>
       ),
@@ -102,7 +102,7 @@ export function ReportsPage() {
       align: "right",
       width: "170px",
       cell: (r) => {
-        const name = `the report on ${r.question_slug}`;
+        const name = `the report on ${r.block_slug}`;
         const move = (next: ReportStatus) => () => changeStatus.mutate({ report: r, next });
         return (
           <div className="flex justify-end">
@@ -110,7 +110,7 @@ export function ReportsPage() {
               actions={[
                 {
                   icon: <Pencil className="h-4 w-4" />,
-                  label: `Fix question ${r.question_slug}`,
+                  label: `Fix question ${r.block_slug}`,
                   onClick: () => router.push(`/question-bank/${r.block}/edit`),
                 },
                 ...(r.status === "open"
@@ -212,7 +212,7 @@ export function ReportsPage() {
         title="Delete this report?"
         description={
           <>
-            The report on <span className="font-medium text-foreground">{deleting?.question_slug}</span> will be removed
+            The report on <span className="font-medium text-foreground">{deleting?.block_slug}</span> will be removed
             for good. To keep a record, mark it reviewed or dismiss it instead.
           </>
         }

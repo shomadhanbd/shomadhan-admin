@@ -19,5 +19,7 @@ export interface Report {
   question_prompt: string;
   /** The block that holds the question, for opening it in the question editor. */
   block: number;
+  /** The block's reference (`b-17`), as the question bank shows it. */
+  block_slug: string;
   created_at: string;
 }
