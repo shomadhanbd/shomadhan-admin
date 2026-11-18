@@ -1,0 +1,215 @@
+"use client";
+
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ClipboardList, Eye, EyeOff, Pencil, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { dateTime } from "@/lib/format";
+import { MOCK_TESTS, mockTestKeys, mockTestsApi } from "@/features/mock-tests/api";
+import { MOCK_TEST_STATUSES, MOCK_TEST_STATUS_LABELS } from "@/features/mock-tests/constants";
+import { useCrudList } from "@/hooks/use-crud-list";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
+import { LookupSelect } from "@/components/shared/lookup-select";
+import { EmptyState, PageHeader, SearchInput } from "@/components/shared/page-shell";
+import { RowActions } from "@/components/shared/row-actions";
+import { MockTestSheet } from "./mock-test-sheet";
+import type { MockTest } from "@/features/mock-tests/types";
+
+export function MockTestsPage() {
+  const queryClient = useQueryClient();
+  const [status, setStatus] = useState("");
+  /** `"new"`, or the id of the test being edited while its sheet is open. */
+  const [editing, setEditing] = useState<number | "new" | null>(null);
+
+  const { rows, isLoading, isFetching, search, onSearch, setPage, deleting, setDeleting, remove, pagination } =
+    useCrudList<MockTest>({
+      key: mockTestKeys.all[0],
+      path: MOCK_TESTS,
+      params: { status },
+      onDeleted: () => toast.success("Mock test deleted"),
+    });
+
+  // The list leaves the paper out, so the editor loads the whole test first, fresh each time.
+  const detail = useQuery({
+    queryKey: [...mockTestKeys.all, "detail", editing],
+    queryFn: () => mockTestsApi.get(editing as number),
+    enabled: typeof editing === "number",
+    staleTime: 0,
+  });
+
+  const publish = useMutation({
+    mutationFn: (test: MockTest) => mockTestsApi.update(test.id, { is_published: !test.is_published }),
+    onSuccess: (saved) => {
+      queryClient.invalidateQueries({ queryKey: mockTestKeys.all });
+      toast.success(saved.is_published ? "Mock test published" : "Mock test unpublished");
+    },
+  });
+
+  const columns: Column<MockTest>[] = [
+    {
+      key: "test",
+      header: "Test",
+      cell: (t) => (
+        <div className="max-w-md min-w-0">
+          <p className="truncate font-medium text-foreground">{t.title}</p>
+          <p className="truncate text-xs text-muted-foreground">{t.subtitle || `${t.time_limit_minutes} minutes`}</p>
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      width: "120px",
+      cell: (t) => (
+        <Badge variant={t.status === "draft" ? "outline" : t.status === "running" ? "default" : "secondary"}>
+          {MOCK_TEST_STATUS_LABELS[t.status]}
+        </Badge>
+      ),
+    },
+    {
+      key: "schedule",
+      header: "Schedule",
+      secondary: true,
+      width: "210px",
+      cell: (t) => (
+        <div className="min-w-0">
+          <p className="truncate text-sm text-foreground">{dateTime(t.start_time)}</p>
+          <p className="truncate text-xs text-muted-foreground">to {dateTime(t.end_time)}</p>
+        </div>
+      ),
+    },
+    {
+      key: "questions",
+      header: "Questions",
+      align: "right",
+      secondary: true,
+      width: "100px",
+      cell: (t) => <span className="text-sm text-muted-foreground">{t.question_count}</span>,
+    },
+    {
+      key: "marks",
+      header: "Marks",
+      align: "right",
+      secondary: true,
+      width: "90px",
+      cell: (t) => <span className="text-sm text-muted-foreground">{Number(t.total_marks)}</span>,
+    },
+    {
+      key: "actions",
+      header: "",
+      align: "right",
+      width: "140px",
+      cell: (t) => (
+        <div className="flex justify-end">
+          <RowActions
+            actions={[
+              { icon: <Pencil className="h-4 w-4" />, label: `Edit ${t.title}`, onClick: () => setEditing(t.id) },
+              t.is_published
+                ? {
+                    icon: <EyeOff className="h-4 w-4" />,
+                    label: `Unpublish ${t.title}`,
+                    onClick: () => publish.mutate(t),
+                  }
+                : { icon: <Eye className="h-4 w-4" />, label: `Publish ${t.title}`, onClick: () => publish.mutate(t) },
+              {
+                icon: <Trash2 className="h-4 w-4" />,
+                label: `Delete ${t.title}`,
+                onClick: () => setDeleting(t),
+                destructive: true,
+              },
+            ]}
+          />
+        </div>
+      ),
+    },
+  ];
+
+  const filtered = Boolean(search || status);
+  const newButton = (size?: "lg") => (
+    <Button size={size} onClick={() => setEditing("new")}>
+      <Plus className="h-4 w-4" />
+      New mock test
+    </Button>
+  );
+
+  return (
+    <div className="space-y-6">
+      <PageHeader title="Mock tests" description="Scheduled tests shown to a chosen audience">
+        <SearchInput value={search} onChange={onSearch} placeholder="Search mock tests…" />
+        <LookupSelect
+          ariaLabel="Filter by status"
+          value={status}
+          onChange={(v) => {
+            setStatus(v);
+            setPage(1);
+          }}
+          options={MOCK_TEST_STATUSES}
+          placeholder="All statuses"
+          allLabel="All statuses"
+          className="w-36 bg-card"
+        />
+        {newButton("lg")}
+      </PageHeader>
+
+      <DataTable
+        columns={columns}
+        rows={rows}
+        rowKey={(t) => t.id}
+        loading={isLoading}
+        refreshing={isFetching && !isLoading}
+        empty={
+          filtered ? (
+            <EmptyState
+              icon={<ClipboardList className="h-5 w-5" />}
+              title="No mock tests match these filters"
+              action={
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    onSearch("");
+                    setStatus("");
+                  }}
+                >
+                  Clear filters
+                </Button>
+              }
+            />
+          ) : (
+            <EmptyState
+              firstRun
+              title="No mock tests yet"
+              description="A mock test is a timed paper of questions from the bank, open to chosen students between two dates."
+              action={newButton()}
+            />
+          )
+        }
+      />
+
+      <Pagination {...pagination} />
+
+      {editing === "new" && <MockTestSheet key="new" test={null} onOpenChange={(o) => !o && setEditing(null)} />}
+      {/* Held back during a refetch so the editor never opens on the previous copy of the test. */}
+      {typeof editing === "number" && detail.data && !detail.isFetching && (
+        <MockTestSheet key={editing} test={detail.data} onOpenChange={(o) => !o && setEditing(null)} />
+      )}
+
+      <ConfirmDialog
+        open={deleting !== null}
+        onOpenChange={(o) => !o && setDeleting(null)}
+        title="Delete this mock test?"
+        description={
+          <>
+            <span className="font-medium text-foreground">{deleting?.title}</span> will be removed; its questions stay
+            in the bank. A test students have attempted cannot be deleted — unpublish it instead.
+          </>
+        }
+        confirmLabel="Delete mock test"
+        pending={remove.isPending}
+        onConfirm={() => deleting && remove.mutate(deleting)}
+      />
+    </div>
+  );
+}

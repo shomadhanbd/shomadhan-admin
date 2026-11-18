@@ -19,6 +19,7 @@ import {
   type QuestionDraft,
 } from "@/features/question-bank/question-draft";
 import { Button } from "@/components/ui/button";
+import { ChipSelect } from "@/components/shared/chip-select";
 import { FormSection, FormSheet } from "@/components/shared/form-sheet";
 import { LookupSelect } from "@/components/shared/lookup-select";
 import { Field } from "@/components/shared/page-shell";
@@ -159,33 +160,12 @@ export function QuestionBlockSheet({
         </div>
 
         {draft.chapter && (topics.data?.length ?? 0) > 0 && (
-          <div className="space-y-1.5">
-            <p className="text-sm font-medium text-foreground">Topics</p>
-            <div className="flex flex-wrap gap-2">
-              {topics.data!.map((topic) => {
-                const active = draft.topics.includes(topic.id);
-                return (
-                  <button
-                    key={topic.id}
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() =>
-                      patch({
-                        topics: active ? draft.topics.filter((t) => t !== topic.id) : [...draft.topics, topic.id],
-                      })
-                    }
-                    className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                      active
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-border text-muted-foreground hover:border-foreground/20"
-                    }`}
-                  >
-                    {topic.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <ChipSelect
+            label="Topics"
+            options={topics.data}
+            value={draft.topics}
+            onChange={(v) => patch({ topics: v })}
+          />
         )}
       </FormSection>
 

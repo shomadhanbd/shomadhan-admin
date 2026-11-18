@@ -19,6 +19,7 @@ import {
   BookMarked,
   BookOpen,
   ChevronDown,
+  ClipboardList,
   Flag,
   GraduationCap,
   Layers,
@@ -60,6 +61,10 @@ export const navGroups: { label: string; items: NavItem[] }[] = [
       { title: "Question bank", url: "/question-bank", icon: Library },
       { title: "Reports", url: "/reports", icon: Flag },
     ],
+  },
+  {
+    label: "Exams",
+    items: [{ title: "Mock tests", url: "/mock-tests", icon: ClipboardList }],
   },
   {
     label: "More",
