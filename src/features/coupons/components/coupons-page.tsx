@@ -100,7 +100,12 @@ function CouponDialog({ coupon, onOpenChange }: { coupon: Coupon | null; onOpenC
             autoFocus
           />
         </Field>
-        <Field id="coupon-discount" label="Discount (৳)" required hint="Taken off the plan's price.">
+        <Field
+          id="coupon-discount"
+          label="Discount (৳)"
+          required
+          hint="Taken off the plan's price; at least ৳10 must be left to pay."
+        >
           <Input
             id="coupon-discount"
             type="number"
