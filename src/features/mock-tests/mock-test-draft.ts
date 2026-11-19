@@ -1,4 +1,4 @@
-import { toLocalInput } from "@/lib/format";
+import { fromLocalInput, toLocalInput } from "@/lib/format";
 import type { QuestionBlock } from "@/features/question-bank/types";
 import type { MockTestBody, MockTestDetail } from "./types";
 
@@ -86,7 +86,8 @@ export function draftProblem(draft: MockTestDraft): string | null {
   return null;
 }
 
-export function toBody(draft: MockTestDraft): MockTestBody {
+/** The request body; `original` is the saved test being edited, so untouched times go back exactly. */
+export function toBody(draft: MockTestDraft, original?: MockTestDetail | null): MockTestBody {
   return {
     title: draft.title.trim(),
     subtitle: draft.subtitle.trim(),
@@ -99,10 +100,10 @@ export function toBody(draft: MockTestDraft): MockTestBody {
     has_negative_marking: draft.hasNegativeMarking,
     negative_marks_fraction: draft.hasNegativeMarking ? draft.negativeFraction : "0",
     max_attempts: Number(draft.maxAttempts),
-    // `datetime-local` is the admin's own clock; the API takes an absolute moment.
-    start_time: new Date(draft.start).toISOString(),
-    end_time: new Date(draft.end).toISOString(),
-    result_publish_time: new Date(draft.resultPublish).toISOString(),
+    // `datetime-local` is the admin's own clock; the API takes an absolute moment. All three are required.
+    start_time: fromLocalInput(draft.start, original?.start_time)!,
+    end_time: fromLocalInput(draft.end, original?.end_time)!,
+    result_publish_time: fromLocalInput(draft.resultPublish, original?.result_publish_time)!,
     is_published: draft.isPublished,
   };
 }

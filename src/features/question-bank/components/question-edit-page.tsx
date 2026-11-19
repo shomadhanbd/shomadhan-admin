@@ -12,9 +12,10 @@ import { questionBlockKeys, questionBlocksApi } from "@/features/question-bank/a
 import { reportKeys, reportsApi } from "@/features/reports/api";
 import { REPORT_REASON_LABELS } from "@/features/reports/constants";
 import { Badge } from "@/components/ui/badge";
+import { RecordUnavailable } from "@/components/shared/detail-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
-import { EmptyState, PageHeader } from "@/components/shared/page-shell";
+import { PageHeader } from "@/components/shared/page-shell";
 import type { Report } from "@/features/reports/types";
 import { QuestionBlockForm } from "./question-block-form";
 
@@ -83,7 +84,12 @@ export function QuestionEditPage({ params }: { params: Promise<{ id: string }> }
     router.replace("/reports");
   }
 
-  const { data: block, isLoading } = useQuery({
+  const {
+    data: block,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: [...questionBlockKeys.all, "detail", Number(id)],
     queryFn: () => questionBlocksApi.get(Number(id)),
     // Fetched fresh on arrival; not again on window focus, since the form has already copied it into its draft.
@@ -103,16 +109,14 @@ export function QuestionEditPage({ params }: { params: Promise<{ id: string }> }
 
   if (!block) {
     return (
-      <div className="space-y-6">
-        <PageHeader title="Edit question" backHref="/question-bank" />
-        <div className="rounded-(--shape-md) surface">
-          <EmptyState
-            icon={<Library className="h-5 w-5" />}
-            title="This question could not be found"
-            description="It may have been deleted."
-          />
-        </div>
-      </div>
+      <RecordUnavailable
+        title="Edit question"
+        backHref="/question-bank"
+        icon={<Library className="h-5 w-5" />}
+        noun="question"
+        error={error}
+        onRetry={() => refetch()}
+      />
     );
   }
 

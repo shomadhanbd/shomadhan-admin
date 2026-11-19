@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { apiError } from "@/lib/api-error";
 import { useSubjects } from "@/lib/lookups";
 import { chaptersApi, curriculumKeys, topicsApi } from "@/features/curriculum/api";
+import { refreshAfterQuestionChange } from "@/features/question-bank/refresh";
 import { questionBlockKeys, questionBlocksApi } from "@/features/question-bank/api";
 import { PART_LABELS, STIMULUS_TYPES } from "@/features/question-bank/constants";
 import {
@@ -95,11 +96,7 @@ export function QuestionBlockForm({
     onSuccess: async (saved) => {
       // The question's page reads this entry; set first, so it shows the saved version straight away.
       queryClient.setQueryData([...questionBlockKeys.all, "detail", saved.id], saved);
-      queryClient.invalidateQueries({ queryKey: questionBlockKeys.all });
-      // Question counts on the curriculum screens follow every save.
-      for (const key of ["chapters", "subjects", "academicGroups", "educationLevels"] as const) {
-        queryClient.invalidateQueries({ queryKey: curriculumKeys[key].all });
-      }
+      refreshAfterQuestionChange(queryClient);
       toast.success(isEdit ? "Question updated" : "Question added");
       if (onSaved) return onSaved(saved);
       // Replace, not push: Back from the saved record must not reopen the form it was saved from.

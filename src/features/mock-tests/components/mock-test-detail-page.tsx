@@ -12,13 +12,12 @@ import { MOCK_TEST_STATUS_LABELS } from "@/features/mock-tests/constants";
 import { BlockPreview } from "@/features/question-bank/components/block-preview";
 import { QUESTION_TYPE_LABELS } from "@/features/question-bank/constants";
 import { Badge } from "@/components/ui/badge";
+import { DetailCard, RecordUnavailable } from "@/components/shared/detail-card";
 import { buttonClass } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ViewRow } from "@/components/shared/edit-card";
 import { EmptyState, PageHeader } from "@/components/shared/page-shell";
 import type { MockTestDetail } from "@/features/mock-tests/types";
-
-const CARD = "rounded-(--shape-md) surface";
 
 /** The names behind a list of ids, in lookup order; an em dash when none resolve. */
 function names(ids: number[], rows: { id: number; name: string }[] | undefined): string {
@@ -42,18 +41,6 @@ function typeCounts(test: MockTestDetail): [string, number][] {
   return [...counts].sort((a, b) => b[1] - a[1]);
 }
 
-function Card({ title, aside, children }: { title: string; aside?: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <section className={CARD}>
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-3.5">
-        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-        {aside}
-      </header>
-      <div className="px-5 py-4">{children}</div>
-    </section>
-  );
-}
-
 /** One mock test on a page of its own: its numbers, settings and the whole paper with the answer key. */
 export function MockTestDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -61,7 +48,12 @@ export function MockTestDetailPage({ params }: { params: Promise<{ id: string }>
   const groups = useAcademicGroups();
   const subjects = useSubjects();
 
-  const { data: test, isLoading } = useQuery({
+  const {
+    data: test,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: [...mockTestKeys.all, "detail", Number(id)],
     queryFn: () => mockTestsApi.get(Number(id)),
   });
@@ -82,16 +74,14 @@ export function MockTestDetailPage({ params }: { params: Promise<{ id: string }>
 
   if (!test) {
     return (
-      <div className="space-y-6">
-        <PageHeader title="Mock test" backHref="/mock-tests" />
-        <div className={CARD}>
-          <EmptyState
-            icon={<ClipboardList className="h-5 w-5" />}
-            title="This mock test could not be found"
-            description="It may have been deleted."
-          />
-        </div>
-      </div>
+      <RecordUnavailable
+        title="Mock test"
+        backHref="/mock-tests"
+        icon={<ClipboardList className="h-5 w-5" />}
+        noun="mock test"
+        error={error}
+        onRetry={() => refetch()}
+      />
     );
   }
 
@@ -144,7 +134,7 @@ export function MockTestDetailPage({ params }: { params: Promise<{ id: string }>
 
       {/* The paper is the wide column; the settings sit beside it once the screen has room. */}
       <div className="grid items-start gap-4 xl:grid-cols-[1fr_360px]">
-        <Card
+        <DetailCard
           title="Paper"
           aside={
             <div className="flex flex-wrap gap-1.5">
@@ -176,28 +166,28 @@ export function MockTestDetailPage({ params }: { params: Promise<{ id: string }>
               ))}
             </ol>
           )}
-        </Card>
+        </DetailCard>
 
         <div className="space-y-4 xl:order-last">
-          <Card title="Audience">
+          <DetailCard title="Audience">
             <dl className="divide-y divide-border">
               <ViewRow label="Education levels">{names(test.applied_education_levels, levels.data)}</ViewRow>
               <ViewRow label="Academic groups">{names(test.applied_academic_groups, groups.data)}</ViewRow>
               <ViewRow label="Subjects">{names(test.applied_subjects, subjects.data)}</ViewRow>
             </dl>
-          </Card>
-          <Card title="Schedule">
+          </DetailCard>
+          <DetailCard title="Schedule">
             <dl className="divide-y divide-border">
               <ViewRow label="Starts">{dateTime(test.start_time)}</ViewRow>
               <ViewRow label="Ends">{dateTime(test.end_time)}</ViewRow>
               <ViewRow label="Results published">{dateTime(test.result_publish_time)}</ViewRow>
               <ViewRow label="Visibility">{test.is_published ? "Published" : "Not published"}</ViewRow>
             </dl>
-          </Card>
+          </DetailCard>
           {test.description && (
-            <Card title="Description">
+            <DetailCard title="Description">
               <p className="text-sm text-foreground">{test.description}</p>
-            </Card>
+            </DetailCard>
           )}
         </div>
       </div>

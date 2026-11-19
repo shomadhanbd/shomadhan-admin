@@ -5,9 +5,9 @@ import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Library, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { plainText } from "@/lib/format";
 import { useSubjects } from "@/lib/lookups";
 import { chaptersApi, curriculumKeys } from "@/features/curriculum/api";
+import { refreshAfterQuestionChange } from "@/features/question-bank/refresh";
 import { QUESTION_BLOCKS, questionBlockKeys } from "@/features/question-bank/api";
 import { QUESTION_TYPES, QUESTION_TYPE_LABELS } from "@/features/question-bank/constants";
 import { useCrudList } from "@/hooks/use-crud-list";
@@ -21,11 +21,9 @@ import { EmptyState, ListToolbar, PageHeader, SearchInput, TimeAgo } from "@/com
 import { RichContent } from "@/components/shared/rich-content";
 import { RowActions } from "@/components/shared/row-actions";
 import type { QuestionBlock } from "@/features/question-bank/types";
+import { blockPreview } from "@/features/question-bank/preview";
 
-/** The words a row is recognised by: a group's stimulus, else its first question. */
-function preview(block: QuestionBlock): string {
-  return plainText(block.stimulus_content) || plainText(block.questions[0]?.prompt_content) || "Empty question";
-}
+const preview = (block: QuestionBlock) => blockPreview(block) || "Empty question";
 
 export function QuestionBankPage() {
   const queryClient = useQueryClient();
@@ -60,9 +58,7 @@ export function QuestionBankPage() {
     path: QUESTION_BLOCKS,
     params: { subject, chapter, question_type: type },
     onDeleted: () => {
-      for (const key of ["chapters", "subjects", "academicGroups", "educationLevels"] as const) {
-        queryClient.invalidateQueries({ queryKey: curriculumKeys[key].all });
-      }
+      refreshAfterQuestionChange(queryClient);
       toast.success("Question deleted");
     },
   });

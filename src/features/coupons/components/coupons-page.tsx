@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pencil, Plus, TicketPercent, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { apiError } from "@/lib/api-error";
-import { date, money, toLocalInput } from "@/lib/format";
+import { date, fromLocalInput, money, toLocalInput } from "@/lib/format";
 import { useProducts } from "@/lib/lookups";
 import { COUPONS, couponKeys, couponsApi } from "@/features/coupons/api";
 import { useCrudList } from "@/hooks/use-crud-list";
@@ -36,9 +36,6 @@ const ACTIVE_FILTER = [
   { id: "false", name: "Switched off" },
 ];
 
-/** An optional `datetime-local` value as the API's absolute moment, or `null` when left blank. */
-const toMoment = (value: string) => (value ? new Date(value).toISOString() : null);
-
 function CouponDialog({ coupon, onOpenChange }: { coupon: Coupon | null; onOpenChange: (o: boolean) => void }) {
   const queryClient = useQueryClient();
   const isEdit = Boolean(coupon);
@@ -58,8 +55,8 @@ function CouponDialog({ coupon, onOpenChange }: { coupon: Coupon | null; onOpenC
       const payload = {
         code: code.trim(),
         discount_amount: Number(discount),
-        valid_from: toMoment(from),
-        valid_until: toMoment(until),
+        valid_from: fromLocalInput(from, coupon?.valid_from),
+        valid_until: fromLocalInput(until, coupon?.valid_until),
         max_uses: maxUses ? Number(maxUses) : null,
         applies_to: appliesTo,
         is_active: isActive,

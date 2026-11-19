@@ -18,22 +18,26 @@ const TOKEN = /(<\/?[a-zA-Z][^<>]*>)|\$\$([\s\S]+?)\$\$|\$(?!\s)([^$\n]+?)(?<!\s
 
 const ENTITIES: Record<string, string> = { "&lt;": "<", "&gt;": ">", "&amp;": "&" };
 
-/** Stands in for a formula while the surrounding HTML is sanitised; plain text, so the sanitiser keeps it. */
-const placeholder = (index: number) => `@@math${index}@@`;
+/** The tags question content may use, as in the backend's import and the mobile app; no attributes at all. */
+const ALLOWED_TAGS = ["b", "i", "u", "sup", "sub", "br", "ul", "ol", "li", "p"];
 
 function toHtml(content: string): string {
   // Formulas are lifted out before sanitising. Left in, `$x<y$` loses its tail: the sanitiser reads `<y…` as a tag.
   // Tags are matched too, only so that a `$` inside an attribute is skipped rather than taken for a delimiter.
+  // Each formula's stand-in is plain text, so the sanitiser keeps it. Its random part means stored
+  // content cannot spell one out to get markup of its own past the sanitiser.
+  const marker = `@@math-${Math.random().toString(36).slice(2)}${Date.now().toString(36)}-`;
   const formulas: string[] = [];
   const lifted = content.replace(TOKEN, (match, tag?: string, block?: string, inline?: string) => {
     if (tag) return match;
     const tex = (block ?? inline ?? "").replace(/&(lt|gt|amp);/g, (entity) => ENTITIES[entity]);
     formulas.push(katex.renderToString(tex, { displayMode: block !== undefined, throwOnError: false }));
-    return placeholder(formulas.length - 1);
+    return `${marker}${formulas.length - 1}@@`;
   });
-  // Sanitised so nothing in stored content can run in the panel; KaTeX's own markup goes back in after.
-  return DOMPurify.sanitize(lifted).replace(
-    /@@math(\d+)@@/g,
+  // Sanitised so nothing in stored content can run or restyle the panel; KaTeX's own markup goes back in after.
+  const clean = DOMPurify.sanitize(lifted, { ALLOWED_TAGS, ALLOWED_ATTR: [] });
+  return clean.replace(
+    new RegExp(`${marker}(\\d+)@@`, "g"),
     (match, index: string) => formulas[Number(index)] ?? match,
   );
 }

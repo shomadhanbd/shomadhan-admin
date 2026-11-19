@@ -101,7 +101,8 @@ export function MockTestForm({ test, cancelHref }: { test: MockTestDetail | null
   }, [draft.blocks]);
 
   const save = useMutation({
-    mutationFn: () => (isEdit ? mockTestsApi.update(test!.id, toBody(draft)) : mockTestsApi.create(toBody(draft))),
+    mutationFn: () =>
+      isEdit ? mockTestsApi.update(test!.id, toBody(draft, test)) : mockTestsApi.create(toBody(draft)),
     onSuccess: (saved) => {
       // The test's own page reads this entry; set first, so it shows the saved version straight away.
       queryClient.setQueryData([...mockTestKeys.all, "detail", saved.id], saved);

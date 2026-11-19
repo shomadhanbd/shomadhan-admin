@@ -8,36 +8,29 @@ import { date, dateTime, money } from "@/lib/format";
 import { paymentKeys, paymentsApi } from "@/features/payments/api";
 import { paymentStatus } from "@/features/payments/constants";
 import { Badge } from "@/components/ui/badge";
+import { DetailCard, RecordUnavailable } from "@/components/shared/detail-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Empty, ViewRow } from "@/components/shared/edit-card";
-import { EmptyState, PageHeader } from "@/components/shared/page-shell";
+import { PageHeader } from "@/components/shared/page-shell";
 
-export const CARD = "rounded-(--shape-md) surface";
-
-export function Card({
-  title,
-  aside,
-  children,
-}: {
-  title: string;
-  aside?: React.ReactNode;
-  children: React.ReactNode;
-}) {
+/** A payment page whose record did not load: gone (404), or failed with a way to retry. */
+export function PaymentUnavailable({ title, error, onRetry }: { title: string; error: unknown; onRetry: () => void }) {
   return (
-    <section className={CARD}>
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-3.5">
-        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-        {aside}
-      </header>
-      <div className="px-5 py-4">{children}</div>
-    </section>
+    <RecordUnavailable
+      title={title}
+      backHref="/billing/payments"
+      icon={<CreditCard className="h-5 w-5" />}
+      noun="payment"
+      error={error}
+      onRetry={onRetry}
+    />
   );
 }
 
 /** The gateway's own record, as sent, for checking a disputed payment against what SSLCommerz or Apple said. */
 export function RawRecord({ title, record }: { title: string; record: Record<string, unknown> }) {
   return (
-    <Card title={title}>
+    <DetailCard title={title}>
       {Object.keys(record).length === 0 ? (
         <p className="text-sm text-muted-foreground">Nothing was received.</p>
       ) : (
@@ -45,18 +38,7 @@ export function RawRecord({ title, record }: { title: string; record: Record<str
           {JSON.stringify(record, null, 2)}
         </pre>
       )}
-    </Card>
-  );
-}
-
-export function NotFound({ title }: { title: string }) {
-  return (
-    <div className="space-y-6">
-      <PageHeader title={title} backHref="/billing/payments" />
-      <div className={CARD}>
-        <EmptyState icon={<CreditCard className="h-5 w-5" />} title="This payment could not be found" />
-      </div>
-    </div>
+    </DetailCard>
   );
 }
 
@@ -70,13 +52,18 @@ export const Loading = () => (
 /** `/billing/payments/{id}`: one SSLCommerz payment, what it bought, and the subscription it granted. */
 export function PaymentDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { data: payment, isLoading } = useQuery({
+  const {
+    data: payment,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: [...paymentKeys.all, "detail", Number(id)],
     queryFn: () => paymentsApi.get(Number(id)),
   });
 
   if (isLoading) return <Loading />;
-  if (!payment) return <NotFound title="Payment" />;
+  if (!payment) return <PaymentUnavailable title="Payment" error={error} onRetry={() => refetch()} />;
 
   const status = paymentStatus(payment.status);
 
@@ -92,7 +79,7 @@ export function PaymentDetailPage({ params }: { params: Promise<{ id: string }> 
 
       <div className="grid items-start gap-4 xl:grid-cols-2">
         <div className="space-y-4">
-          <Card title="Payment">
+          <DetailCard title="Payment">
             <dl className="divide-y divide-border">
               <ViewRow label="Plan">
                 {payment.product_title} · {payment.granted_months} {payment.granted_months === 1 ? "month" : "months"}
@@ -110,9 +97,9 @@ export function PaymentDetailPage({ params }: { params: Promise<{ id: string }> 
                 {[payment.card_type, payment.card_issuer_country].filter(Boolean).join(" · ") || <Empty />}
               </ViewRow>
             </dl>
-          </Card>
+          </DetailCard>
 
-          <Card title="Student">
+          <DetailCard title="Student">
             {payment.user ? (
               <dl className="divide-y divide-border">
                 <ViewRow label="Name">
@@ -125,9 +112,9 @@ export function PaymentDetailPage({ params }: { params: Promise<{ id: string }> 
             ) : (
               <p className="text-sm text-muted-foreground">The account that paid has since been deleted.</p>
             )}
-          </Card>
+          </DetailCard>
 
-          <Card title="Subscription granted">
+          <DetailCard title="Subscription granted">
             {payment.subscription ? (
               <dl className="divide-y divide-border">
                 <ViewRow label="From">{date(payment.subscription.starts_at)}</ViewRow>
@@ -141,7 +128,7 @@ export function PaymentDetailPage({ params }: { params: Promise<{ id: string }> 
                   : "None: only a completed payment grants VIP."}
               </p>
             )}
-          </Card>
+          </DetailCard>
         </div>
 
         <RawRecord title="SSLCommerz response" record={payment.gateway_response} />

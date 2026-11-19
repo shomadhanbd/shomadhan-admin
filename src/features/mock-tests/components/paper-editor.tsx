@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { ArrowDown, ArrowUp, ChevronDown, X } from "lucide-react";
-import { plainText } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { blockMarks, marksLabel } from "@/features/mock-tests/mock-test-draft";
 import { BlockPreview } from "@/features/question-bank/components/block-preview";
@@ -10,6 +9,7 @@ import { QUESTION_TYPE_LABELS } from "@/features/question-bank/constants";
 import { Button } from "@/components/ui/button";
 import { RichContent } from "@/components/shared/rich-content";
 import type { QuestionBlock } from "@/features/question-bank/types";
+import { blockPreview } from "@/features/question-bank/preview";
 
 /** The test's paper: its blocks in order, each one expandable to its full content, movable and removable. */
 export function PaperEditor({
@@ -65,10 +65,7 @@ export function PaperEditor({
                   {index + 1}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <RichContent
-                    content={plainText(block.stimulus_content) || plainText(block.questions[0]?.prompt_content)}
-                    className={cn(open ? "" : "line-clamp-1")}
-                  />
+                  <RichContent content={blockPreview(block)} className={cn(open ? "" : "line-clamp-1")} />
                   <span className="block truncate text-xs text-muted-foreground">
                     {[...new Set(block.questions.map((q) => QUESTION_TYPE_LABELS[q.question_type]))].join(", ")} ·{" "}
                     {block.subject_name} · {marksLabel(blockMarks(block))}

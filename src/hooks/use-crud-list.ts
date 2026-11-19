@@ -30,6 +30,9 @@ interface CrudListOptions<T> {
   inUrl?: boolean;
 }
 
+/** The rows-per-page choices the table's picker offers. */
+export const PAGE_SIZES = [10, 25, 50, 100];
+
 /** Search, paging, the list query and delete for a paginated admin table. */
 export function useCrudList<T extends { id: number | string }>({
   key,
@@ -43,13 +46,21 @@ export function useCrudList<T extends { id: number | string }>({
 }: CrudListOptions<T>) {
   const queryClient = useQueryClient();
   const [page, setPage] = useUrlNumber("page", 1, inUrl);
-  const [pageSize, setPageSize] = useUrlNumber("size", initialPageSize, inUrl);
+  const [rawPageSize, setPageSize] = useUrlNumber("size", initialPageSize, inUrl);
+  // Only the sizes the picker offers: a hand-typed `?size=500` would pass the API's cap and hide rows.
+  const pageSize = PAGE_SIZES.includes(rawPageSize) ? rawPageSize : initialPageSize;
   const [urlSearch, setUrlSearch] = useUrlState("q", "", inUrl);
   // `-start_time` style, as DRF's `?ordering=` takes it.
   const [sort, setSort] = useUrlState("sort", "", inUrl);
   // The box follows every keystroke; the address and the query only the settled text.
   const [search, setSearch] = useState(urlSearch);
   const debouncedSearch = useDebounce(search, 400);
+  // `?q=` changed from outside (a sidebar link, Back): the box follows the address.
+  const [seenUrlSearch, setSeenUrlSearch] = useState(urlSearch);
+  if (urlSearch !== seenUrlSearch) {
+    setSeenUrlSearch(urlSearch);
+    if (urlSearch !== debouncedSearch) setSearch(urlSearch);
+  }
   const [deleting, setDeleting] = useState<T | null>(null);
 
   useEffect(() => {
@@ -59,16 +70,18 @@ export function useCrudList<T extends { id: number | string }>({
   }, [debouncedSearch]);
 
   const query = useQuery({
-    queryKey: [key, path, page, pageSize, debouncedSearch, sort, params],
+    // The address, not the box, is what the rows match, so a shared or restored link shows the same list.
+    queryKey: [key, path, page, pageSize, urlSearch, sort, params],
     queryFn: async () => {
-      const query = cleanParams({ ...params, page, page_size: pageSize, search: debouncedSearch, ordering: sort });
+      const query = cleanParams({ ...params, page, page_size: pageSize, search: urlSearch, ordering: sort });
       try {
         return (await api.get<Page<T>>(path, { params: query })).data;
       } catch (err) {
         // The page emptied behind us (its last row was deleted, or stopped matching the filter).
         if (page > 1 && axios.isAxiosError(err) && err.response?.status === 404) {
+          // Back to the first page in one step, not one request per page from a stale bookmark.
           // Only if still on that page: a delete steps back by itself, and must not be stepped back twice.
-          setPage((p) => (p === page ? Math.max(1, p - 1) : p));
+          setPage((p) => (p === page ? 1 : p));
           return { count: 0, next: null, previous: null, results: [] };
         }
         throw err;

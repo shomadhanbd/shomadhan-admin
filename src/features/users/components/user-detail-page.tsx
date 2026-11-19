@@ -13,17 +13,16 @@ import { subscriptionSource } from "@/features/subscriptions/constants";
 import { USERS, userKeys, usersApi } from "@/features/users/api";
 import { useRecordSave } from "@/hooks/use-record-save";
 import { Badge } from "@/components/ui/badge";
+import { DetailCard, RecordUnavailable } from "@/components/shared/detail-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { EditCard, Empty, ViewRow } from "@/components/shared/edit-card";
 import { LookupSelect } from "@/components/shared/lookup-select";
-import { EmptyState, Field, PageHeader } from "@/components/shared/page-shell";
+import { Field, PageHeader } from "@/components/shared/page-shell";
 import { displayName } from "./users-page";
 import type { UserDetail } from "@/features/users/types";
-
-const CARD = "rounded-(--shape-md) surface";
 
 const ATTEMPT_KINDS = { mock: "Mock test", practice: "Practice test", daily: "Daily challenge" } as const;
 const ATTEMPT_STATUSES = {
@@ -32,18 +31,6 @@ const ATTEMPT_STATUSES = {
   expired: "Expired",
   graded: "Graded",
 } as const;
-
-function Card({ title, aside, children }: { title: string; aside?: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <section className={CARD}>
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-3.5">
-        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-        {aside}
-      </header>
-      <div className="px-5 py-4">{children}</div>
-    </section>
-  );
-}
 
 /** Name and email: the card's own form, saved with a PATCH of just these fields. */
 function ProfileCard({ user, save }: { user: UserDetail; save: ReturnType<typeof useRecordSave<UserDetail>> }) {
@@ -102,7 +89,8 @@ function ProfileCard({ user, save }: { user: UserDetail; save: ReturnType<typeof
 function PlacementCard({ user, save }: { user: UserDetail; save: ReturnType<typeof useRecordSave<UserDetail>> }) {
   const levels = useEducationLevels();
   const groups = useAcademicGroups();
-  const batches = useBatches();
+  // Retired batches too, so a student placed in one shows its name rather than its id.
+  const batches = useBatches(true);
   const [level, setLevel] = useState(String(user.education_level ?? ""));
   const [group, setGroup] = useState(String(user.academic_group ?? ""));
   const [batch, setBatch] = useState(String(user.batch ?? ""));
@@ -111,9 +99,10 @@ function PlacementCard({ user, save }: { user: UserDetail; save: ReturnType<type
     () => groups.data?.filter((g) => String(g.education_level) === level),
     [groups.data, level],
   );
+  // Active batches to choose from, plus the student's own even if it has been retired.
   const batchOptions = useMemo(
-    () => batches.data?.filter((b) => String(b.education_level) === level),
-    [batches.data, level],
+    () => batches.data?.filter((b) => String(b.education_level) === level && (b.is_active || b.id === user.batch)),
+    [batches.data, level, user.batch],
   );
 
   return (
@@ -208,16 +197,20 @@ export function UserDetailPage({ params }: { params: Promise<{ id: string }> }) 
   const [confirmingStatus, setConfirmingStatus] = useState(false);
   const [granting, setGranting] = useState(false);
 
-  const { data: user, isLoading } = useQuery({
+  const {
+    data: user,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: userKeys.detail(Number(id)),
     queryFn: () => usersApi.get(Number(id)),
   });
 
-  const save = useRecordSave<UserDetail>({
-    path: `${USERS}${id}/`,
-    queryKey: [...userKeys.detail(Number(id))],
-    listKey: [...userKeys.all],
-  });
+  // One per card, so one card's errors and saving state never show on the other.
+  const record = { path: `${USERS}${id}/`, queryKey: [...userKeys.detail(Number(id))], listKey: [...userKeys.all] };
+  const saveProfile = useRecordSave<UserDetail>(record);
+  const savePlacement = useRecordSave<UserDetail>(record);
 
   const toggleActive = useMutation({
     mutationFn: () => usersApi.update(Number(id), { is_active: !user!.is_active }),
@@ -244,16 +237,14 @@ export function UserDetailPage({ params }: { params: Promise<{ id: string }> }) 
 
   if (!user) {
     return (
-      <div className="space-y-6">
-        <PageHeader title="User" backHref="/users" />
-        <div className={CARD}>
-          <EmptyState
-            icon={<Users className="h-5 w-5" />}
-            title="This user could not be found"
-            description="The id may be wrong."
-          />
-        </div>
-      </div>
+      <RecordUnavailable
+        title="User"
+        backHref="/users"
+        icon={<Users className="h-5 w-5" />}
+        noun="user"
+        error={error}
+        onRetry={() => refetch()}
+      />
     );
   }
 
@@ -316,9 +307,9 @@ export function UserDetailPage({ params }: { params: Promise<{ id: string }> }) 
 
       <div className="grid items-start gap-4 xl:grid-cols-2">
         <div className="space-y-4">
-          <ProfileCard key={`profile-${user.id}`} user={user} save={save} />
-          <PlacementCard key={`placement-${user.id}`} user={user} save={save} />
-          <Card title="Account">
+          <ProfileCard key={`profile-${user.id}`} user={user} save={saveProfile} />
+          <PlacementCard key={`placement-${user.id}`} user={user} save={savePlacement} />
+          <DetailCard title="Account">
             <dl className="divide-y divide-border">
               <ViewRow label="Status">{user.is_active ? "Active" : "Deactivated: cannot sign in"}</ViewRow>
               <ViewRow label="Onboarded">{user.is_onboarded ? "Yes" : "No: has not picked a level and group"}</ViewRow>
@@ -327,11 +318,11 @@ export function UserDetailPage({ params }: { params: Promise<{ id: string }> }) 
               <ViewRow label="CQ answers submitted">{progress.cq_submissions}</ViewRow>
               <ViewRow label="Reports filed">{progress.reports_filed}</ViewRow>
             </dl>
-          </Card>
+          </DetailCard>
         </div>
 
         <div className="space-y-4">
-          <Card
+          <DetailCard
             title="Subscriptions"
             aside={
               <Button variant="outline" size="sm" onClick={() => setGranting(true)}>
@@ -360,9 +351,9 @@ export function UserDetailPage({ params }: { params: Promise<{ id: string }> }) 
                 ))}
               </ul>
             )}
-          </Card>
+          </DetailCard>
 
-          <Card title="Recent tests">
+          <DetailCard title="Recent tests">
             {user.recent_attempts.length === 0 ? (
               <p className="text-sm text-muted-foreground">No tests taken yet.</p>
             ) : (
@@ -385,7 +376,7 @@ export function UserDetailPage({ params }: { params: Promise<{ id: string }> }) 
                 ))}
               </ul>
             )}
-          </Card>
+          </DetailCard>
         </div>
       </div>
 

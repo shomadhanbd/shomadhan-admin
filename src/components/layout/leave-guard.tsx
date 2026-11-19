@@ -2,7 +2,13 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { hasUnsavedChanges, settlePendingLeave, usePendingLeave, whenSafeToLeave } from "@/hooks/use-leave-warning";
+import {
+  hasUnsavedChanges,
+  interceptBack,
+  settlePendingLeave,
+  usePendingLeave,
+  whenSafeToLeave,
+} from "@/hooks/use-leave-warning";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 
 /** A plain left click on a link to another page of this app, which the router would follow. */
@@ -20,8 +26,8 @@ function inAppHref(e: MouseEvent): string | null {
 }
 
 /**
- * Asks before leaving a page with unsaved changes. Links are caught in the capture phase, before
- * the router's own click handler; other ways out call `whenSafeToLeave` themselves.
+ * Asks before leaving a page with unsaved changes. Links and the browser's Back are caught in the
+ * capture phase, before the router's own handlers; other ways out call `whenSafeToLeave` themselves.
  */
 export function LeaveGuard() {
   const router = useRouter();
@@ -37,7 +43,12 @@ export function LeaveGuard() {
       whenSafeToLeave(() => router.push(href));
     }
     document.addEventListener("click", onClick, true);
-    return () => document.removeEventListener("click", onClick, true);
+    // Capture runs before the router's own popstate listener, so Back can be held for the question.
+    window.addEventListener("popstate", interceptBack, true);
+    return () => {
+      document.removeEventListener("click", onClick, true);
+      window.removeEventListener("popstate", interceptBack, true);
+    };
   }, [router]);
 
   return (

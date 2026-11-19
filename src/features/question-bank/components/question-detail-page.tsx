@@ -8,29 +8,17 @@ import { Library, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { dateTime } from "@/lib/format";
 import { curriculumKeys, topicsApi } from "@/features/curriculum/api";
+import { refreshAfterQuestionChange } from "@/features/question-bank/refresh";
 import { questionBlockKeys, questionBlocksApi } from "@/features/question-bank/api";
 import { QUESTION_TYPE_LABELS, STIMULUS_TYPES } from "@/features/question-bank/constants";
 import { Badge } from "@/components/ui/badge";
+import { DetailCard, RecordUnavailable } from "@/components/shared/detail-card";
 import { Button, buttonClass } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { ViewRow } from "@/components/shared/edit-card";
-import { EmptyState, PageHeader } from "@/components/shared/page-shell";
+import { PageHeader } from "@/components/shared/page-shell";
 import { BlockPreview } from "./block-preview";
-
-const CARD = "rounded-(--shape-md) surface";
-
-function Card({ title, aside, children }: { title: string; aside?: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <section className={CARD}>
-      <header className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-5 py-3.5">
-        <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-        {aside}
-      </header>
-      <div className="px-5 py-4">{children}</div>
-    </section>
-  );
-}
 
 /** `/question-bank/{id}`: one question as students see it, with its answer key, placement and details. */
 export function QuestionDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -39,7 +27,12 @@ export function QuestionDetailPage({ params }: { params: Promise<{ id: string }>
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState(false);
 
-  const { data: block, isLoading } = useQuery({
+  const {
+    data: block,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: [...questionBlockKeys.all, "detail", Number(id)],
     queryFn: () => questionBlocksApi.get(Number(id)),
   });
@@ -53,10 +46,9 @@ export function QuestionDetailPage({ params }: { params: Promise<{ id: string }>
   const remove = useMutation({
     mutationFn: () => questionBlocksApi.remove(Number(id)),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: questionBlockKeys.all });
-      for (const key of ["chapters", "subjects", "academicGroups", "educationLevels"] as const) {
-        queryClient.invalidateQueries({ queryKey: curriculumKeys[key].all });
-      }
+      // Dropped first: invalidating it would refetch the record just deleted, twice, into 404s.
+      queryClient.removeQueries({ queryKey: [...questionBlockKeys.all, "detail", Number(id)] });
+      refreshAfterQuestionChange(queryClient);
       toast.success("Question deleted");
       router.push("/question-bank");
     },
@@ -75,16 +67,14 @@ export function QuestionDetailPage({ params }: { params: Promise<{ id: string }>
 
   if (!block) {
     return (
-      <div className="space-y-6">
-        <PageHeader title="Question" backHref="/question-bank" />
-        <div className={CARD}>
-          <EmptyState
-            icon={<Library className="h-5 w-5" />}
-            title="This question could not be found"
-            description="It may have been deleted."
-          />
-        </div>
-      </div>
+      <RecordUnavailable
+        title="Question"
+        backHref="/question-bank"
+        icon={<Library className="h-5 w-5" />}
+        noun="question"
+        error={error}
+        onRetry={() => refetch()}
+      />
     );
   }
 
@@ -117,7 +107,7 @@ export function QuestionDetailPage({ params }: { params: Promise<{ id: string }>
       </PageHeader>
 
       <div className="grid items-start gap-4 xl:grid-cols-[1fr_340px]">
-        <Card
+        <DetailCard
           title={block.questions.length === 1 ? "Question" : `${block.questions.length} questions`}
           aside={
             <div className="flex flex-wrap gap-1.5">
@@ -130,10 +120,10 @@ export function QuestionDetailPage({ params }: { params: Promise<{ id: string }>
           }
         >
           <BlockPreview block={block} />
-        </Card>
+        </DetailCard>
 
         <div className="space-y-4">
-          <Card title="Placement">
+          <DetailCard title="Placement">
             <dl className="divide-y divide-border">
               <ViewRow label="Subject">{block.subject_name}</ViewRow>
               <ViewRow label="Chapter">{block.chapter_name ?? "No chapter"}</ViewRow>
@@ -141,8 +131,8 @@ export function QuestionDetailPage({ params }: { params: Promise<{ id: string }>
                 {block.topics.length === 0 ? "None" : topicNames.join(", ") || `${block.topics.length} topics`}
               </ViewRow>
             </dl>
-          </Card>
-          <Card title="Details">
+          </DetailCard>
+          <DetailCard title="Details">
             <dl className="divide-y divide-border">
               <ViewRow label="Total marks">{totalMarks}</ViewRow>
               {block.kind === "group" && (
@@ -153,7 +143,7 @@ export function QuestionDetailPage({ params }: { params: Promise<{ id: string }>
               <ViewRow label="Order in chapter">{block.order_in_chapter}</ViewRow>
               <ViewRow label="Last updated">{dateTime(block.updated_at)}</ViewRow>
             </dl>
-          </Card>
+          </DetailCard>
         </div>
       </div>
 

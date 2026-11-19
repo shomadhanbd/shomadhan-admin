@@ -7,20 +7,26 @@ import { dateTime } from "@/lib/format";
 import { paymentKeys, paymentsApi } from "@/features/payments/api";
 import { appleStatus } from "@/features/payments/constants";
 import { Badge } from "@/components/ui/badge";
+import { DetailCard } from "@/components/shared/detail-card";
 import { Empty, ViewRow } from "@/components/shared/edit-card";
 import { PageHeader } from "@/components/shared/page-shell";
-import { Card, Loading, NotFound, RawRecord } from "./payment-detail-page";
+import { Loading, PaymentUnavailable, RawRecord } from "./payment-detail-page";
 
 /** `/billing/payments/apple/{id}`: one App Store purchase and the decoded transaction Apple signed. */
 export function AppleTransactionDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const { data: purchase, isLoading } = useQuery({
+  const {
+    data: purchase,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: [...paymentKeys.apple, "detail", Number(id)],
     queryFn: () => paymentsApi.getApple(Number(id)),
   });
 
   if (isLoading) return <Loading />;
-  if (!purchase) return <NotFound title="App Store purchase" />;
+  if (!purchase) return <PaymentUnavailable title="App Store purchase" error={error} onRetry={() => refetch()} />;
 
   const status = appleStatus(purchase.status);
 
@@ -37,7 +43,7 @@ export function AppleTransactionDetailPage({ params }: { params: Promise<{ id: s
 
       <div className="grid items-start gap-4 xl:grid-cols-2">
         <div className="space-y-4">
-          <Card title="Purchase">
+          <DetailCard title="Purchase">
             <dl className="divide-y divide-border">
               <ViewRow label="App Store product">
                 <span className="font-mono text-xs">{purchase.apple_product_id}</span>
@@ -52,9 +58,9 @@ export function AppleTransactionDetailPage({ params }: { params: Promise<{ id: s
                 <span className="font-mono text-xs">{purchase.transaction_id}</span>
               </ViewRow>
             </dl>
-          </Card>
+          </DetailCard>
 
-          <Card title="Student">
+          <DetailCard title="Student">
             <dl className="divide-y divide-border">
               <ViewRow label="Name">
                 <Link href={`/users/${purchase.user}`} className="text-primary hover:underline">
@@ -63,7 +69,7 @@ export function AppleTransactionDetailPage({ params }: { params: Promise<{ id: s
               </ViewRow>
               <ViewRow label="Mobile">{purchase.user_mobile ?? <Empty />}</ViewRow>
             </dl>
-          </Card>
+          </DetailCard>
         </div>
 
         <RawRecord title="Apple transaction" record={purchase.raw_payload} />

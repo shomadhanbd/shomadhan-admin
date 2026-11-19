@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PAGE_SIZES } from "@/hooks/use-crud-list";
 
 export interface Column<T> {
   key: string;
@@ -118,6 +119,15 @@ export function DataTable<T>({
                 <th
                   key={c.key}
                   scope="col"
+                  aria-sort={
+                    !c.sortKey || !onSort
+                      ? undefined
+                      : sort === c.sortKey
+                        ? "ascending"
+                        : sort === `-${c.sortKey}`
+                          ? "descending"
+                          : "none"
+                  }
                   style={c.width ? { width: c.width } : undefined}
                   className={cn(
                     "text-xs font-semibold text-muted-foreground",
@@ -234,9 +244,9 @@ export function Pagination({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {["10", "25", "50", "100"].map((s) => (
-              <SelectItem key={s} value={s}>
-                {s}
+            {PAGE_SIZES.map((n) => (
+              <SelectItem key={n} value={String(n)}>
+                {n}
               </SelectItem>
             ))}
           </SelectContent>

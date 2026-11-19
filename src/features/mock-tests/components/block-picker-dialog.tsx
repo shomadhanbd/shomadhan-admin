@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Check, Plus } from "lucide-react";
-import { plainText } from "@/lib/format";
 import { chaptersApi, curriculumKeys } from "@/features/curriculum/api";
 import { blockMarks, marksLabel } from "@/features/mock-tests/mock-test-draft";
 import { QUESTION_BLOCKS, questionBlockKeys } from "@/features/question-bank/api";
@@ -18,6 +17,7 @@ import { LookupSelect } from "@/components/shared/lookup-select";
 import { SearchInput } from "@/components/shared/page-shell";
 import { RichContent } from "@/components/shared/rich-content";
 import type { QuestionBlock } from "@/features/question-bank/types";
+import { blockPreview } from "@/features/question-bank/preview";
 
 /** Browse the question bank within the test's subjects and add blocks to its paper. */
 export function BlockPickerDialog({
@@ -125,10 +125,7 @@ export function BlockPickerDialog({
             return (
               <li key={block.id} className="flex items-center gap-3 px-5 py-3">
                 <div className="min-w-0 flex-1">
-                  <RichContent
-                    content={plainText(block.stimulus_content) || plainText(block.questions[0]?.prompt_content)}
-                    className="truncate font-medium"
-                  />
+                  <RichContent content={blockPreview(block)} className="truncate font-medium" />
                   <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                     {[...new Set(block.questions.map((q) => q.question_type))].map((t) => (
                       <Badge key={t} variant="secondary">

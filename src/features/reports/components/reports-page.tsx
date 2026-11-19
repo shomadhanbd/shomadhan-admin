@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, Flag, Pencil, RotateCcw, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import { plainText } from "@/lib/format";
+import { previewHtml } from "@/lib/format";
 import { QUESTION_TYPE_LABELS } from "@/features/question-bank/constants";
 import { REPORTS, reportKeys, reportsApi } from "@/features/reports/api";
 import { REPORT_REASONS, REPORT_REASON_LABELS, REPORT_STATUSES } from "@/features/reports/constants";
@@ -80,7 +80,7 @@ export function ReportsPage() {
       cell: (r) => (
         <div className="max-w-sm min-w-0">
           <Link href={`/question-bank/${r.block}`} className="block hover:text-primary">
-            <RichContent content={plainText(r.question_prompt)} className="truncate font-medium" />
+            <RichContent content={previewHtml(r.question_prompt)} className="truncate font-medium" />
           </Link>
           <p className="truncate text-xs text-muted-foreground">
             {r.block_slug} · {QUESTION_TYPE_LABELS[r.question_type]}

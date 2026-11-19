@@ -192,6 +192,9 @@ export function PaymentsPage() {
   const source: Source = sourceParam === "apple" ? "apple" : "sslcommerz";
   const [status, setStatus] = useUrlState("status");
   const [range, setRange] = useUrlRange();
+  // Both lists read these from the address; a new tab starts without the other's search and sort.
+  const [, setSearchParam] = useUrlState("q");
+  const [, setSortParam] = useUrlState("sort");
   const statuses = source === "apple" ? APPLE_STATUSES : PAYMENT_STATUSES;
 
   // One list per source, each fetching only while its tab is showing.
@@ -235,9 +238,14 @@ export function PaymentsPage() {
               role="tab"
               aria-selected={source === s.id}
               onClick={() => {
+                if (s.id === source) return;
                 setSource(s.id);
-                // The two sources use different status values.
-                filter(() => setStatus(""));
+                // The two sources use different statuses and sortable columns.
+                filter(() => {
+                  setStatus("");
+                  setSearchParam("");
+                  setSortParam("");
+                });
               }}
               className={cn(
                 "h-8 rounded-[calc(var(--shape-sm)-2px)] px-3 text-sm transition-colors duration-(--duration-short)",

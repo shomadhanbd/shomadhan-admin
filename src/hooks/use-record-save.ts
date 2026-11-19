@@ -8,7 +8,7 @@ import { apiError, fieldErrors } from "@/lib/api-error";
 
 /**
  * Saves one card's fields of a record with a PATCH to `path`, keeps `queryKey` (the page's own query) current,
- * and refreshes the list behind `listKey`. 422 messages land on their inputs; anything else on the card.
+ * and refreshes the list behind `listKey`. Field errors land on their inputs; anything else on the card.
  */
 export function useRecordSave<T>({
   path,
@@ -24,6 +24,8 @@ export function useRecordSave<T>({
   const [error, setError] = useState<string | null>(null);
   const update = useMutation({
     mutationFn: async (fields: Record<string, unknown>) => (await api.patch<T>(path, fields)).data,
+    // Shown on the card by `save` below, so the app-wide error toast stays out of it.
+    meta: { handlesErrors: true },
     onSuccess: (saved) => {
       queryClient.setQueryData(queryKey, saved);
       queryClient.invalidateQueries({ queryKey: listKey });

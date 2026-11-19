@@ -76,6 +76,7 @@ export function TopHeader({ onLogout }: { onLogout: () => void }) {
   const [open, setOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const crumbs = useCrumbs();
 
   // `getUser()` reads localStorage, which the server cannot see, so it is only
@@ -104,6 +105,18 @@ export function TopHeader({ onLogout }: { onLogout: () => void }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Escape closes the open menu and puts focus back on the button that opened it.
+  useEffect(() => {
+    if (!open) return;
+    function onEscape(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      setOpen(false);
+      triggerRef.current?.focus();
+    }
+    document.addEventListener("keydown", onEscape);
+    return () => document.removeEventListener("keydown", onEscape);
+  }, [open]);
 
   const initial = name.replace(/^\+/, "").charAt(0).toUpperCase();
 
@@ -170,6 +183,7 @@ export function TopHeader({ onLogout }: { onLogout: () => void }) {
             avatar rather than only inside the dropdown -- it is the one place
             identifying who is signed in. */}
         <button
+          ref={triggerRef}
           onClick={() => setOpen((prev) => !prev)}
           aria-label="Account menu"
           aria-expanded={open}

@@ -34,6 +34,17 @@ export function toLocalInput(value: string | null | undefined): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+/**
+ * A `datetime-local` value as the API's absolute moment, or `null` when blank. Given the stored value it
+ * was filled from, an untouched input sends that back exactly: the input holds only whole minutes, so
+ * converting it again would quietly move the time by up to 59 seconds.
+ */
+export function fromLocalInput(value: string, original?: string | null): string | null {
+  if (!value) return null;
+  if (original && toLocalInput(original) === value) return original;
+  return new Date(value).toISOString();
+}
+
 const ENTITIES: Record<string, string> = { nbsp: " ", amp: "&", lt: "<", gt: ">", quot: '"', apos: "'" };
 
 /** One line of rich text's words: real tags removed (so "x<5 and y>3" survives) and entities decoded. */
@@ -46,6 +57,18 @@ export function plainText(html: string | null | undefined): string {
       const code = name[1] === "x" || name[1] === "X" ? parseInt(name.slice(2), 16) : Number(name.slice(1));
       return String.fromCodePoint(code);
     })
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Stored HTML as one line for `<RichContent>`: tags dropped, entities left encoded. Unlike
+ * `plainText`, "&lt;br&gt;" stays text instead of turning back into a line break.
+ */
+export function previewHtml(html: string | null | undefined): string {
+  if (!html) return "";
+  return html
+    .replace(/<\/?[a-zA-Z][^<>]*>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
 }

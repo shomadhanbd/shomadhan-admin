@@ -10,6 +10,7 @@ import { useProducts } from "@/lib/lookups";
 import { subscriptionKeys, subscriptionsApi } from "@/features/subscriptions/api";
 import { subscriptionSource } from "@/features/subscriptions/constants";
 import { USERS, userKeys } from "@/features/users/api";
+import { useDebounce } from "@/hooks/use-debounce";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { FormDialog } from "@/components/shared/form-dialog";
@@ -51,7 +52,8 @@ const defaultUntil = (student: Student | null) => monthsAfter(currentVip(student
 /** Finds the student to grant VIP to, by name or mobile. */
 function StudentPicker({ student, onPick }: { student: Student | null; onPick: (s: Student | null) => void }) {
   const [term, setTerm] = useState("");
-  const search = term.trim();
+  // Asks once typing pauses, not on every keystroke.
+  const search = useDebounce(term.trim(), 300);
   const { data, isFetching } = useQuery({
     queryKey: [...userKeys.all, "picker", search],
     queryFn: async () => (await api.get<Page<User>>(USERS, { params: { search, page_size: 6 } })).data.results,
@@ -61,10 +63,10 @@ function StudentPicker({ student, onPick }: { student: Student | null; onPick: (
   if (student) {
     return (
       <div className="flex items-center justify-between gap-3 rounded-(--shape-sm) border border-border px-3 py-2">
-        <div className="min-w-0">
-          <p className="line-clamp-1 text-sm font-medium text-foreground">{student.name || student.mobile}</p>
-          {student.name && <p className="text-xs text-muted-foreground">{student.mobile}</p>}
-        </div>
+        <output id="grant-student" className="block min-w-0">
+          <span className="line-clamp-1 text-sm font-medium text-foreground">{student.name || student.mobile}</span>
+          {student.name && <span className="block text-xs text-muted-foreground">{student.mobile}</span>}
+        </output>
         <button type="button" className="text-xs text-primary hover:underline" onClick={() => onPick(null)}>
           Change
         </button>
@@ -174,10 +176,11 @@ export function GrantDialog({
     >
       <Field id="grant-student" label="Student" required>
         {preset ? (
-          <p className="text-sm text-foreground">
+          // An <output> can carry the field's label, unlike a paragraph.
+          <output id="grant-student" className="block text-sm text-foreground">
             {preset.name || preset.mobile}
             {preset.name && <span className="text-muted-foreground"> · {preset.mobile}</span>}
-          </p>
+          </output>
         ) : (
           <StudentPicker student={student} onPick={pickStudent} />
         )}

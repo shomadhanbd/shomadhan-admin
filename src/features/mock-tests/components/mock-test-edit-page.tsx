@@ -5,14 +5,20 @@ import { useQuery } from "@tanstack/react-query";
 import { ClipboardList } from "lucide-react";
 import { mockTestKeys, mockTestsApi } from "@/features/mock-tests/api";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState, PageHeader } from "@/components/shared/page-shell";
+import { RecordUnavailable } from "@/components/shared/detail-card";
+import { PageHeader } from "@/components/shared/page-shell";
 import { MockTestForm } from "./mock-test-form";
 
 /** `/mock-tests/{id}/edit`: one mock test's editor on a page of its own. */
 export function MockTestEditPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
 
-  const { data: test, isLoading } = useQuery({
+  const {
+    data: test,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: [...mockTestKeys.all, "detail", Number(id)],
     queryFn: () => mockTestsApi.get(Number(id)),
     // Fetched fresh on arrival; not again on window focus, since the form has already copied it into its draft.
@@ -34,16 +40,14 @@ export function MockTestEditPage({ params }: { params: Promise<{ id: string }> }
 
   if (!test) {
     return (
-      <div className="space-y-6">
-        <PageHeader title="Edit mock test" backHref="/mock-tests" />
-        <div className="rounded-(--shape-md) surface">
-          <EmptyState
-            icon={<ClipboardList className="h-5 w-5" />}
-            title="This mock test could not be found"
-            description="It may have been deleted."
-          />
-        </div>
-      </div>
+      <RecordUnavailable
+        title="Edit mock test"
+        backHref="/mock-tests"
+        icon={<ClipboardList className="h-5 w-5" />}
+        noun="mock test"
+        error={error}
+        onRetry={() => refetch()}
+      />
     );
   }
 

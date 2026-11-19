@@ -130,11 +130,12 @@ export function SubscriptionsPage() {
     },
   ];
 
-  const filtered = Boolean(search || status || source);
+  // Active VIP is the default view, so only a change from it counts as filtering.
+  const filtered = Boolean(search || status !== "active" || source);
 
   function clearFilters() {
     onSearch("");
-    setStatus("");
+    setStatus("active");
     setSource("");
   }
   const grantButton = (size?: "lg") => (
