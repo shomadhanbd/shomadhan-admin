@@ -14,6 +14,7 @@ import {
 import { useCrudList } from "@/hooks/use-crud-list";
 import { useUrlState } from "@/hooks/use-url-state";
 import { Badge } from "@/components/ui/badge";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { LookupSelect } from "@/components/shared/lookup-select";
@@ -65,11 +66,14 @@ export function SubscriptionsPage() {
       key: "student",
       header: "Student",
       cell: (s) => (
-        <div className="min-w-0">
-          <Link href={`/users/${s.user}`} className="line-clamp-1 font-medium text-foreground hover:text-primary">
-            {s.user_name || s.user_mobile}
-          </Link>
-          {s.user_name && <p className="line-clamp-1 text-xs text-muted-foreground">{s.user_mobile}</p>}
+        <div className="flex min-w-0 items-center gap-3">
+          <PersonAvatar id={s.user} name={s.user_name || s.user_mobile || ""} />
+          <div className="min-w-0">
+            <Link href={`/users/${s.user}`} className="line-clamp-1 font-medium text-foreground hover:text-primary">
+              {s.user_name || s.user_mobile}
+            </Link>
+            {s.user_name && <p className="line-clamp-1 text-xs text-muted-foreground">{s.user_mobile}</p>}
+          </div>
         </div>
       ),
     },

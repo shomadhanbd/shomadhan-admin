@@ -36,7 +36,7 @@ export function MockTestEditPage({ params }: { params: Promise<{ id: string }> }
     return (
       <div className="space-y-6">
         <PageHeader title="Edit mock test" backHref="/mock-tests" />
-        <div className="rounded-(--shape-md) bg-card shadow-sm ring-1 ring-foreground/[0.07]">
+        <div className="rounded-(--shape-md) surface">
           <EmptyState
             icon={<ClipboardList className="h-5 w-5" />}
             title="This mock test could not be found"

@@ -37,7 +37,7 @@ const KINDS: { id: BlockKind; title: string; blurb: string }[] = [
   { id: "group", title: "Stimulus group", blurb: "A shared passage with questions under it, like a CQ." },
 ];
 
-const CARD = "space-y-4 rounded-(--shape-md) bg-card px-5 py-4 shadow-sm ring-1 ring-foreground/[0.07]";
+const CARD = "space-y-4 rounded-(--shape-md) surface px-5 py-4";
 
 /**
  * Each field's own preview is hidden on wide screens, where the student view beside the form shows the whole
@@ -320,7 +320,7 @@ export function QuestionBlockForm({
 
         {/* The whole question as students will see it, updating as you type; it scrolls on its own if long. */}
         <aside className="hidden xl:sticky xl:top-36 xl:block">
-          <section className="rounded-(--shape-md) bg-card shadow-sm ring-1 ring-foreground/[0.07]">
+          <section className="rounded-(--shape-md) surface">
             <header className="border-b border-border px-5 py-3.5">
               <h2 className="text-sm font-semibold text-foreground">Student view</h2>
               <p className="text-xs text-muted-foreground">With the answer key, which students only see afterwards.</p>

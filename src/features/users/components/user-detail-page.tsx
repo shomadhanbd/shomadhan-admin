@@ -23,7 +23,7 @@ import { EmptyState, Field, PageHeader } from "@/components/shared/page-shell";
 import { displayName } from "./users-page";
 import type { UserDetail } from "@/features/users/types";
 
-const CARD = "rounded-(--shape-md) bg-card shadow-sm ring-1 ring-foreground/[0.07]";
+const CARD = "rounded-(--shape-md) surface";
 
 const ATTEMPT_KINDS = { mock: "Mock test", practice: "Practice test", daily: "Daily challenge" } as const;
 const ATTEMPT_STATUSES = {
@@ -266,7 +266,7 @@ export function UserDetailPage({ params }: { params: Promise<{ id: string }> }) 
         description={user.full_name ? (user.mobile ?? "") : "No name set"}
         backHref="/users"
       >
-        {user.has_active_subscription ? <Badge>VIP</Badge> : <Badge variant="outline">Free</Badge>}
+        {user.has_active_subscription ? <Badge variant="warning">VIP</Badge> : <Badge variant="outline">Free</Badge>}
         {!user.is_active && <Badge variant="outline">Deactivated</Badge>}
         {user.is_staff && <Badge variant="secondary">Staff</Badge>}
         {/* Not on your own account: the API refuses it, since it would lock you out. Pages mount only
@@ -352,7 +352,7 @@ export function UserDetailPage({ params }: { params: Promise<{ id: string }> }) 
                       </p>
                     </div>
                     {s.is_active && new Date(s.expires_at) > new Date() ? (
-                      <Badge>Active</Badge>
+                      <Badge variant="success">Active</Badge>
                     ) : (
                       <Badge variant="outline">Ended</Badge>
                     )}

@@ -18,7 +18,7 @@ import { ViewRow } from "@/components/shared/edit-card";
 import { EmptyState, PageHeader } from "@/components/shared/page-shell";
 import type { MockTestDetail } from "@/features/mock-tests/types";
 
-const CARD = "rounded-(--shape-md) bg-card shadow-sm ring-1 ring-foreground/[0.07]";
+const CARD = "rounded-(--shape-md) surface";
 
 /** The names behind a list of ids, in lookup order; an em dash when none resolve. */
 function names(ids: number[], rows: { id: number; name: string }[] | undefined): string {

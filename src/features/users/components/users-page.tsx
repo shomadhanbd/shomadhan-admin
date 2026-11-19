@@ -9,6 +9,7 @@ import { USERS, userKeys } from "@/features/users/api";
 import { useCrudList } from "@/hooks/use-crud-list";
 import { useUrlState } from "@/hooks/use-url-state";
 import { Badge } from "@/components/ui/badge";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { LookupSelect } from "@/components/shared/lookup-select";
@@ -57,13 +58,16 @@ export function UsersPage() {
       key: "user",
       header: "User",
       cell: (u) => (
-        <div className="min-w-0">
-          <Link href={`/users/${u.id}`} className="line-clamp-1 font-medium text-foreground hover:text-primary">
-            {displayName(u)}
-          </Link>
-          <p className="line-clamp-1 text-xs text-muted-foreground">
-            {[u.full_name ? u.mobile : null, u.email].filter(Boolean).join(" · ") || "—"}
-          </p>
+        <div className="flex min-w-0 items-center gap-3">
+          <PersonAvatar id={u.id} name={displayName(u)} />
+          <div className="min-w-0">
+            <Link href={`/users/${u.id}`} className="line-clamp-1 font-medium text-foreground hover:text-primary">
+              {displayName(u)}
+            </Link>
+            <p className="line-clamp-1 text-xs text-muted-foreground">
+              {[u.full_name ? u.mobile : null, u.email].filter(Boolean).join(" · ") || "Not onboarded yet"}
+            </p>
+          </div>
         </div>
       ),
     },
@@ -91,7 +95,7 @@ export function UsersPage() {
       cell: (u) =>
         u.has_active_subscription ? (
           <div>
-            <Badge>VIP</Badge>
+            <Badge variant="warning">VIP</Badge>
             {u.subscription_expires_at && (
               <p className="mt-1 text-xs text-muted-foreground">until {date(u.subscription_expires_at)}</p>
             )}
@@ -113,7 +117,7 @@ export function UsersPage() {
       width: "120px",
       cell: (u) => (
         <div className="flex flex-wrap gap-1">
-          {u.is_active ? <Badge variant="secondary">Active</Badge> : <Badge variant="outline">Deactivated</Badge>}
+          {u.is_active ? <Badge variant="success">Active</Badge> : <Badge variant="outline">Deactivated</Badge>}
           {u.is_staff && <Badge variant="secondary">Staff</Badge>}
         </div>
       ),

@@ -142,7 +142,7 @@ export function ContentField({
       </div>
       {value.trim() && (
         <div className={cn("rounded-(--shape-sm) bg-surface-2 px-3 py-2", previewClassName)}>
-          <p className="mb-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">Preview</p>
+          <p className="mb-1 text-[11px] font-medium text-muted-foreground">Preview</p>
           <RichContent content={value} />
         </div>
       )}

@@ -31,18 +31,18 @@ interface DataTableProps<T> {
 /** The shared data table; a refetch dims the previous rows instead of showing skeletons. */
 export function DataTable<T>({ columns, rows, rowKey, loading, empty, refreshing }: DataTableProps<T>) {
   return (
-    <div className="overflow-hidden rounded-(--shape-md) bg-card shadow-sm ring-1 ring-foreground/[0.07]">
+    <div className="overflow-hidden rounded-(--shape-md) surface">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border">
+            <tr className="border-b border-border bg-muted/70">
               {columns.map((c) => (
                 <th
                   key={c.key}
                   scope="col"
                   style={c.width ? { width: c.width } : undefined}
                   className={[
-                    "text-xs font-medium tracking-wide text-muted-foreground uppercase",
+                    "text-xs font-semibold text-muted-foreground",
                     c.align === "right" ? "text-right" : "text-left",
                     c.secondary ? "hidden sm:table-cell" : "",
                   ].join(" ")}
@@ -75,10 +75,7 @@ export function DataTable<T>({ columns, rows, rowKey, loading, empty, refreshing
               </tr>
             ) : (
               rows.map((row) => (
-                <tr
-                  key={rowKey(row)}
-                  className="transition-colors duration-(--duration-short) hover:bg-primary/(--state-hover)"
-                >
+                <tr key={rowKey(row)} className="transition-colors duration-(--duration-short) hover:bg-accent/70">
                   {columns.map((c) => (
                     <td
                       key={c.key}
@@ -99,7 +96,7 @@ export function DataTable<T>({ columns, rows, rowKey, loading, empty, refreshing
       </div>
       {/* A hairline at the foot rather than a spinner over the rows: the
           rows stay readable while the next page loads. */}
-      {refreshing && <div className="h-0.5 w-full animate-pulse bg-primary/40" />}
+      {refreshing && <div className="h-0.5 w-full animate-pulse bg-brand" />}
     </div>
   );
 }

@@ -7,7 +7,7 @@ import { useHydrated } from "@/hooks/use-hydrated";
 
 function Section({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl bg-card p-6 shadow-sm ring-1 ring-foreground/[0.07]">
+    <section className="rounded-(--shape-md) surface p-6">
       <h2 className="text-base font-semibold text-foreground">{title}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       <div className="mt-5">{children}</div>

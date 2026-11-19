@@ -26,49 +26,37 @@ interface StatTileProps {
   size?: "md" | "sm";
 }
 
-/** label · value · context on a raised surface; the accents are decorative, not an encoding. */
+/** label · value · context on a card; the icon tint tells tiles apart and encodes nothing. */
 export function StatTile({ label, value, prefix, context, icon, accent, loading, size = "md" }: StatTileProps) {
   const sm = size === "sm";
-  if (loading) return <Skeleton className={sm ? "h-[104px] rounded-2xl" : "h-[132px] rounded-2xl"} />;
+  if (loading) return <Skeleton className={sm ? "h-[104px] rounded-(--shape-md)" : "h-[132px] rounded-(--shape-md)"} />;
 
-  // `color-mix` supplies the gradient's darker stop, so a theme declares one
-  // colour per slot rather than a from/to pair.
   const tile = `var(--tile-${accent})`;
 
   return (
     <div
-      className={`group relative h-full overflow-hidden rounded-2xl bg-card ${sm ? "p-4" : "p-5"} shadow-sm ring-1 ring-foreground/[0.07] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:ring-foreground/[0.12]`}
+      className={`group relative h-full overflow-hidden rounded-(--shape-md) surface ${sm ? "p-4" : "p-5"} transition-shadow duration-(--duration-medium) hover:shadow-(--shadow-raised)`}
     >
-      {/* Hairline of accent along the top edge — enough colour to tell the
-          cards apart at a glance without tinting the whole surface. */}
-      <span
-        aria-hidden
-        className="absolute inset-x-0 top-0 h-px"
-        style={{ background: `linear-gradient(to right, ${tile}, transparent)` }}
-      />
-
       <div className="flex items-start justify-between gap-3">
-        <span className="truncate text-sm font-medium text-muted-foreground">{label}</span>
+        <span className="line-clamp-2 text-sm leading-snug font-medium text-muted-foreground">{label}</span>
+        {/* A soft tint of the accent behind the icon, as the app does for its subject icons. */}
         <span
-          className={`flex ${sm ? "h-7 w-7" : "h-8 w-8"} shrink-0 items-center justify-center rounded-lg text-white shadow-sm`}
-          style={{
-            background: `linear-gradient(135deg, ${tile}, color-mix(in oklab, ${tile} 78%, black))`,
-          }}
+          className={`flex ${sm ? "h-8 w-8" : "h-9 w-9"} shrink-0 items-center justify-center rounded-(--shape-sm)`}
+          style={{ background: `color-mix(in oklab, ${tile} 14%, transparent)`, color: tile }}
         >
           {icon}
         </span>
       </div>
 
       {/* Proportional figures, not tabular: equal-width digits make a number
-          like 121 look loose at display sizes. Tabular is for columns that
-          align vertically — axis ticks and table rows. */}
+          like 121 look loose at display sizes. */}
       <p
-        className={`${sm ? "mt-2 text-2xl" : "mt-4 text-3xl"} leading-none font-semibold tracking-tight text-foreground`}
+        className={`${sm ? "mt-1.5 text-[28px]" : "mt-3 text-3xl"} leading-none font-bold tracking-tight text-foreground`}
       >
         {prefix}
         {compact(value)}
       </p>
-      {context && <p className={`${sm ? "mt-2" : "mt-2.5"} truncate text-xs text-muted-foreground`}>{context}</p>}
+      {context && <p className={`${sm ? "mt-2" : "mt-2.5"} line-clamp-2 text-xs text-muted-foreground`}>{context}</p>}
     </div>
   );
 }

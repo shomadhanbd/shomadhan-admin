@@ -104,11 +104,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
             const header = i === 0 || results[i - 1].group !== r.group ? r.group : null;
             return (
               <li key={r.id}>
-                {header && (
-                  <p className="px-3 pt-3 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                    {header}
-                  </p>
-                )}
+                {header && <p className="px-3 pt-3 pb-1 text-xs font-medium text-muted-foreground">{header}</p>}
                 <button
                   type="button"
                   role="option"

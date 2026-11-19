@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Empty, ViewRow } from "@/components/shared/edit-card";
 import { EmptyState, PageHeader } from "@/components/shared/page-shell";
 
-export const CARD = "rounded-(--shape-md) bg-card shadow-sm ring-1 ring-foreground/[0.07]";
+export const CARD = "rounded-(--shape-md) surface";
 
 export function Card({
   title,

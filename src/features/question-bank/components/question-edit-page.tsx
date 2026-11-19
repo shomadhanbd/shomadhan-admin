@@ -105,7 +105,7 @@ export function QuestionEditPage({ params }: { params: Promise<{ id: string }> }
     return (
       <div className="space-y-6">
         <PageHeader title="Edit question" backHref="/question-bank" />
-        <div className="rounded-(--shape-md) bg-card shadow-sm ring-1 ring-foreground/[0.07]">
+        <div className="rounded-(--shape-md) surface">
           <EmptyState
             icon={<Library className="h-5 w-5" />}
             title="This question could not be found"

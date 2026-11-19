@@ -34,7 +34,7 @@ export function EditCard({
   const [editing, setEditing] = useState(false);
 
   return (
-    <section className="rounded-(--shape-md) border border-border bg-card">
+    <section className="rounded-(--shape-md) surface">
       <header className="flex items-start justify-between gap-3 border-b border-border px-5 py-3.5">
         <div className="min-w-0">
           <h2 className="text-sm font-semibold text-foreground">{title}</h2>

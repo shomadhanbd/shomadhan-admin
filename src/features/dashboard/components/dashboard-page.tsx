@@ -15,7 +15,7 @@ function CardLink({ href, children }: { href: string; children: React.ReactNode 
   return (
     <Link
       href={href}
-      className="block h-full rounded-2xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      className="block h-full rounded-(--shape-md) focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
     >
       {children}
     </Link>
@@ -36,7 +36,7 @@ export function DashboardPage() {
     <div className="space-y-4">
       <PageHeader title="Dashboard" description="Users, VIP, today's purchases and the SMS credit at a glance" />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-5">
         <CardLink href="/users">
           <StatTile
             size="sm"

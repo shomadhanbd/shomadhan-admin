@@ -50,7 +50,7 @@ export function QuestionEditor({
   }
 
   return (
-    <div className="overflow-hidden rounded-(--shape-md) border border-border bg-card">
+    <div className="overflow-hidden rounded-(--shape-md) surface">
       <div className="flex items-center gap-2 border-b border-border bg-surface-1 px-3 py-2">
         <button
           type="button"

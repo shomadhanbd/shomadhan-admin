@@ -40,7 +40,7 @@ function TrendChart({
   const preset = RANGES.find((r) => r.id === range)!;
 
   return (
-    <section className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-foreground/[0.07]">
+    <section className="rounded-(--shape-md) surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-medium text-foreground">{title}</h2>

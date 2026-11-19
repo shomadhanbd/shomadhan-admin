@@ -32,7 +32,7 @@ import { BlockPickerDialog } from "./block-picker-dialog";
 import { PaperEditor } from "./paper-editor";
 import type { MockTestDetail } from "@/features/mock-tests/types";
 
-const CARD = "space-y-4 rounded-(--shape-md) bg-card px-5 py-4 shadow-sm ring-1 ring-foreground/[0.07]";
+const CARD = "space-y-4 rounded-(--shape-md) surface px-5 py-4";
 
 /**
  * The mock test editor as a page body: details, audience, schedule and rules on the left, the paper being built
@@ -317,7 +317,7 @@ export function MockTestForm({ test, cancelHref }: { test: MockTestDetail | null
 
         {/* The paper beside the settings, so the admin sees what the test holds while setting it up. */}
         <aside className="min-w-0 xl:sticky xl:top-36">
-          <section className="rounded-(--shape-md) bg-card shadow-sm ring-1 ring-foreground/[0.07]">
+          <section className="rounded-(--shape-md) surface">
             <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-3.5">
               <div className="min-w-0">
                 <h2 className="text-sm font-semibold text-foreground">Paper</h2>

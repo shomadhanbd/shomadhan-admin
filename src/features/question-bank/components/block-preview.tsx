@@ -51,19 +51,19 @@ export function BlockPreview({ block, number }: { block: PreviewBlock; number?: 
             )}
             {question.model_answer && (
               <div className="border-l-2 border-border pl-3">
-                <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">Model answer</p>
+                <p className="text-[11px] font-medium text-muted-foreground">Model answer</p>
                 <RichContent content={question.model_answer} className="text-muted-foreground" />
               </div>
             )}
             {question.explanation && (
               <div className="border-l-2 border-border pl-3">
-                <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">Explanation</p>
+                <p className="text-[11px] font-medium text-muted-foreground">Explanation</p>
                 <RichContent content={question.explanation} className="text-muted-foreground" />
               </div>
             )}
             {JSON_METADATA_TYPES.includes(question.question_type) && Object.keys(question.metadata).length > 0 && (
               <div className="border-l-2 border-border pl-3">
-                <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">Answer key</p>
+                <p className="text-[11px] font-medium text-muted-foreground">Answer key</p>
                 <pre className="overflow-x-auto font-mono text-xs whitespace-pre-wrap text-muted-foreground">
                   {JSON.stringify(question.metadata, null, 2)}
                 </pre>

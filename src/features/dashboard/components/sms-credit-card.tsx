@@ -11,9 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const TONE = {
-  ok: "bg-card ring-foreground/[0.07]",
-  low: "bg-warning/10 ring-warning/40",
-  empty: "bg-destructive/10 ring-destructive/40",
+  ok: "",
+  low: "border-warning/40 bg-warning-surface",
+  empty: "border-destructive/40 bg-destructive-surface",
 };
 
 /** The OTP gateway's credit as a dashboard card, loud when low: at ৳0 nobody can sign up or reset a password. */
@@ -33,7 +33,7 @@ export function SmsCreditCard() {
     },
   });
 
-  if (balance.isLoading) return <Skeleton className="h-[104px] rounded-2xl" />;
+  if (balance.isLoading) return <Skeleton className="col-span-2 h-[104px] rounded-(--shape-md) lg:col-span-1" />;
 
   const b = balance.data;
   const notSent = otp.data?.not_sent ?? 0;
@@ -56,7 +56,8 @@ export function SmsCreditCard() {
       aria-live="polite"
       title={b?.checked_at && `Checked ${dateTime(b.checked_at)}`}
       className={cn(
-        "relative h-full overflow-hidden rounded-2xl p-4 shadow-sm ring-1",
+        // Full width on a phone, where the other tiles pair up two across.
+        "relative col-span-2 h-full overflow-hidden rounded-(--shape-md) surface p-4 lg:col-span-1",
         TONE[level === "empty" ? "empty" : alarming ? "low" : "ok"],
       )}
     >
@@ -75,8 +76,8 @@ export function SmsCreditCard() {
           </Button>
           <span
             className={cn(
-              "flex h-7 w-7 items-center justify-center rounded-lg shadow-sm",
-              alarming ? "bg-destructive text-white" : "bg-primary text-primary-foreground",
+              "flex h-8 w-8 items-center justify-center rounded-(--shape-sm)",
+              alarming ? "bg-destructive text-white" : "bg-primary-surface text-primary dark:text-accent-foreground",
             )}
           >
             {level === "empty" ? (

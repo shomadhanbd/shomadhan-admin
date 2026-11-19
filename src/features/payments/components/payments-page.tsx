@@ -9,6 +9,7 @@ import { APPLE_STATUSES, PAYMENT_STATUSES, appleStatus, paymentStatus } from "@/
 import { useCrudList } from "@/hooks/use-crud-list";
 import { useUrlRange, useUrlState } from "@/hooks/use-url-state";
 import { Badge } from "@/components/ui/badge";
+import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { DateRange } from "@/components/shared/date-range";
@@ -28,11 +29,14 @@ const SOURCES: { id: Source; name: string }[] = [
 function Payer({ id, name, mobile }: { id: number | null; name: string; mobile: string | null }) {
   if (!id) return <span className="text-sm text-muted-foreground">Deleted account</span>;
   return (
-    <div className="min-w-0">
-      <Link href={`/users/${id}`} className="line-clamp-1 font-medium text-foreground hover:text-primary">
-        {name || mobile}
-      </Link>
-      {name && <p className="line-clamp-1 text-xs text-muted-foreground">{mobile}</p>}
+    <div className="flex min-w-0 items-center gap-3">
+      <PersonAvatar id={id} name={name || mobile || ""} />
+      <div className="min-w-0">
+        <Link href={`/users/${id}`} className="line-clamp-1 font-medium text-foreground hover:text-primary">
+          {name || mobile}
+        </Link>
+        {name && <p className="line-clamp-1 text-xs text-muted-foreground">{mobile}</p>}
+      </div>
     </div>
   );
 }

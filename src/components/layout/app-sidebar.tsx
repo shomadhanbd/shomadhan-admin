@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { getUser } from "@/lib/session";
+import { useHydrated } from "@/hooks/use-hydrated";
 import {
   Sidebar,
   SidebarContent,
@@ -101,34 +103,45 @@ function activeUrl(pathname: string) {
   return all.filter((url) => pathname === url || pathname.startsWith(url + "/")).sort((a, b) => b.length - a.length)[0];
 }
 
+/** The student app's logo on a white tile, as on its launcher icon. */
+export function BrandMark({ className = "h-9 w-9" }: { className?: string }) {
+  return (
+    <span className={`flex shrink-0 items-center justify-center rounded-(--shape-sm) bg-white shadow-sm ${className}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- a fixed 18KB logo; nothing to optimise. */}
+      <img src="/shomadhan-logo.png" alt="" className="h-[78%] w-[78%]" />
+    </span>
+  );
+}
+
 /** `onLogout` ends the session; the layout owns it so the chrome stays feature-free. */
 export function AppSidebar({ onLogout }: { onLogout: () => void }) {
   const pathname = usePathname();
   const current = activeUrl(pathname);
   // Groups the admin has folded away; everything starts open.
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  // The stored user lives in localStorage, which only the browser can read.
+  const user = useHydrated() ? getUser() : null;
+  const name = user?.full_name || user?.mobile || "Admin";
 
   return (
-    // Full height from the top edge: the sidebar is its own column now, not
-    // a panel tucked under a full-width header.
     <Sidebar className="border-r border-sidebar-border">
-      {/* The brand lives here rather than in the header, so the left column
-          reads as one surface from the logo down. */}
-      <SidebarHeader className="h-18 shrink-0 justify-center border-b border-sidebar-border px-6 py-0">
-        <Link href="/dashboard" className="flex items-baseline gap-2 select-none">
-          <span className="text-lg font-semibold tracking-tight text-white">Shomadhan</span>
-          <span className="text-xs font-medium text-sidebar-foreground/50">Admin</span>
+      <SidebarHeader className="h-18 shrink-0 justify-center px-5 py-0">
+        <Link href="/dashboard" className="flex items-center gap-3 select-none">
+          <BrandMark />
+          <span className="flex flex-col leading-tight">
+            <span className="text-[15px] font-semibold tracking-tight text-white">Shomadhan</span>
+            <span className="text-xs text-sidebar-foreground/70">Admin panel</span>
+          </span>
         </Link>
       </SidebarHeader>
 
-      {/* The nav scrolls on its own so every link stays reachable however
-          long the list grows, without the page moving underneath it. */}
-      <SidebarContent className="gap-0 overflow-y-auto py-2">
+      {/* The nav scrolls on its own so every link stays reachable however long the list grows. */}
+      <SidebarContent className="gap-0 overflow-y-auto px-3 pt-1 pb-3">
         {navGroups.map((group, groupIndex) => {
           // A lone link gains nothing from folding, so only longer groups get the arrow.
           const foldable = group.items.length > 1;
           const open = !collapsed[group.label];
-          const labelClass = `h-auto px-6 pb-1.5 text-[11px] leading-none font-semibold tracking-[0.12em] text-sidebar-foreground/40 uppercase ${
+          const labelClass = `h-auto px-3 pb-1.5 text-xs font-medium text-sidebar-foreground/55 ${
             groupIndex === 0 ? "pt-2" : "pt-5"
           }`;
 
@@ -143,7 +156,7 @@ export function AppSidebar({ onLogout }: { onLogout: () => void }) {
                       aria-expanded={open}
                     />
                   }
-                  className={`${labelClass} w-full cursor-pointer justify-between transition-colors hover:text-sidebar-foreground/75`}
+                  className={`${labelClass} w-full cursor-pointer justify-between transition-colors hover:text-sidebar-foreground`}
                 >
                   {group.label}
                   <ChevronDown
@@ -155,14 +168,14 @@ export function AppSidebar({ onLogout }: { onLogout: () => void }) {
               )}
               {open && (
                 <SidebarGroupContent>
-                  <SidebarMenu className="gap-0">
+                  <SidebarMenu className="gap-0.5">
                     {group.items.map((item) => (
                       <SidebarMenuItem key={item.url}>
                         <SidebarMenuButton
                           render={<Link href={item.url} />}
                           isActive={current === item.url}
-                          // `data-active:` because the primitive sets a bare attribute; the highlight runs full width.
-                          className="relative h-11 gap-3 rounded-none px-6 text-sm text-sidebar-foreground/75 transition-colors before:absolute before:inset-y-0 before:left-0 before:w-[3px] before:bg-sidebar-primary before:opacity-0 before:transition-opacity hover:bg-white/[0.06] hover:text-white data-active:bg-white/[0.09] data-active:font-medium data-active:text-white data-active:before:opacity-100"
+                          // The active item takes the app's selected-pill gradient.
+                          className="h-10 gap-3 rounded-(--shape-sm) px-3 text-sm text-sidebar-foreground transition-colors duration-(--duration-short) hover:bg-sidebar-accent hover:text-white data-active:bg-brand data-active:font-semibold data-active:text-white data-active:shadow-[0_6px_16px_rgb(6_119_125/0.35)]"
                         >
                           <item.icon className="h-[18px] w-[18px] shrink-0" />
                           <span className="truncate">{item.title}</span>
@@ -177,16 +190,26 @@ export function AppSidebar({ onLogout }: { onLogout: () => void }) {
         })}
       </SidebarContent>
 
-      {/* Pinned rather than sitting at the end of the scrolling list, where
-          it would drift out of reach as the nav grows. */}
-      <SidebarFooter className="shrink-0 border-t border-sidebar-border p-2">
-        <button
-          onClick={() => onLogout()}
-          className="flex w-full items-center gap-3 rounded-md px-4 py-2.5 text-sm text-sidebar-foreground/75 transition-colors hover:bg-destructive/20 hover:text-sidebar-foreground"
-        >
-          <LogOut className="h-[18px] w-[18px] shrink-0" />
-          <span>Logout</span>
-        </button>
+      {/* Pinned, so the signed-in admin and Logout never scroll out of reach. */}
+      <SidebarFooter className="shrink-0 border-t border-sidebar-border p-3">
+        <div className="flex items-center gap-3 rounded-(--shape-sm) bg-sidebar-accent px-3 py-2.5">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-xs font-semibold text-sidebar-primary-foreground">
+            {name.replace(/^\+/, "").charAt(0).toUpperCase()}
+          </span>
+          <span className="min-w-0 flex-1 leading-tight">
+            <span className="block truncate text-sm font-medium text-white">{name}</span>
+            <span className="block truncate text-xs text-sidebar-foreground/70">{user?.mobile ?? "Signed in"}</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => onLogout()}
+            aria-label="Logout"
+            title="Logout"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-(--shape-xs) text-sidebar-foreground transition-colors hover:bg-destructive/20 hover:text-white"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

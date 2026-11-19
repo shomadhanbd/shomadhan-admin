@@ -18,7 +18,7 @@ import { ViewRow } from "@/components/shared/edit-card";
 import { EmptyState, PageHeader } from "@/components/shared/page-shell";
 import { BlockPreview } from "./block-preview";
 
-const CARD = "rounded-(--shape-md) bg-card shadow-sm ring-1 ring-foreground/[0.07]";
+const CARD = "rounded-(--shape-md) surface";
 
 function Card({ title, aside, children }: { title: string; aside?: React.ReactNode; children: React.ReactNode }) {
   return (

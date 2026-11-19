@@ -63,6 +63,11 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-destructive-surface: var(--destructive-surface);
+  --color-success-surface: var(--success-surface);
+  --color-warning-surface: var(--warning-surface);
+  --color-primary-surface: var(--primary-surface);
+  --color-primary-deep: var(--primary-deep);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
@@ -88,247 +93,185 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/*
+ * Colour, taken from the student app's default "teal" palette
+ * (shomadhan-mobile lib/common/theme/app_palette.dart), so the admin reads as
+ * the same product: teal #06777D on teal-tinted greys, ink #0C2A2C for text
+ * and the rail. Dark mode is the app's tealDark palette, not a flip.
+ */
 :root {
-  /* Cards stay pure white -- that is the surface the chart colours were
-     validated against -- while the plane behind them takes the faintest
-     tint of the accent so it does not sit on a cold grey. */
-  --background: color-mix(in oklab, #fafafa 95%, var(--primary));
-  --foreground: #0f172a;
+  --background: #f3f7f7;
+  --foreground: #0c2a2c;
   --card: #ffffff;
-  --card-foreground: #0f172a;
+  --card-foreground: #0c2a2c;
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #4f46e5;
+  --popover-foreground: #0c2a2c;
+  --primary: #06777d;
+  /* The far end of the app's selected-pill gradient: primary lerped 26% to black. */
+  --primary-deep: #055a5e;
   --primary-foreground: #ffffff;
-  --secondary: color-mix(in oklab, #f2f2f3 93%, var(--primary));
-  --secondary-foreground: #1e293b;
-  --muted: color-mix(in oklab, #f2f2f3 93%, var(--primary));
-  --muted-foreground: #64748b;
-  --accent: #e8edf3;
-  --accent-foreground: #4f46e5;
+  /* The app's colorPrimarySurface: soft fills behind teal text and icons. */
+  --primary-surface: #dcf2f0;
+  --secondary: #ecf5f4;
+  --secondary-foreground: #0c2a2c;
+  --muted: #ecf5f4;
+  --muted-foreground: #5e7b7d;
+  --accent: #e4f2f1;
+  --accent-foreground: #06777d;
   --destructive: #dc2626;
-  --success: #15803d;
+  --destructive-surface: #fee2e2;
+  --success: #16a34a;
+  --success-surface: #dcfce7;
   --success-foreground: #ffffff;
   --warning: #b45309;
+  --warning-surface: #fef3c7;
   --warning-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #4f46e5;
-  --chart-1: #2563eb;
+  --border: #d6e9e7;
+  --input: #cfe3e1;
+  --ring: #06777d;
+  /* The app's card: hairline border plus a soft ink shadow (12px blur, 4px down). */
+  --shadow-card: 0 4px 12px rgb(12 42 44 / 0.06);
+  --shadow-raised: 0 10px 28px rgb(12 42 44 / 0.12);
+  /* Behind the page, as the app's header gradient fades into its body. */
+  --wash: #dff0ef;
+
+  --chart-1: #06777d;
   --chart-2: #7c3aed;
   --chart-3: #059669;
   --chart-4: #94a3b8;
   --chart-5: #cbd5e1;
-  /* Categorical series for multi-line charts, in fixed order. Checked for
-     colour-blind separation on the card surface in each mode. */
-  --series-1: #2a78d6;
+  /* Categorical series for multi-line charts, in fixed order. */
+  --series-1: #06777d;
   --series-2: #eb6834;
-  --series-3: #1baf7a;
-  --series-4: #eda100;
-  --radius: 0.5rem;
-  /* Near-neutral, not a hue-tinted slab: a saturated tint of a dark
-     surface goes muddy (amber -> brown, emerald -> olive), which is what
-     dated the first pass. A few percent of the accent is enough to read
-     as themed. */
-  --sidebar: color-mix(in oklab, #0c0d11 93%, var(--sidebar-primary));
-  --sidebar-foreground: #cbd5e1;
-  --sidebar-primary: #818cf8;
-  --sidebar-primary-foreground: #0b0c0f;
-  --sidebar-accent: #2563eb;
+  --series-3: #2a78d6;
+  --series-4: #c98500;
+  --radius: 0.75rem;
+
+  /* The rail is the app's ink (colorSecondary), with its light teal for the active item. */
+  --sidebar: #0c2a2c;
+  --sidebar-foreground: #a7c4c2;
+  --sidebar-primary: #5eead4;
+  --sidebar-primary-foreground: #04302f;
+  --sidebar-accent: rgb(255 255 255 / 0.06);
   --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #818cf8;
+  --sidebar-border: rgb(255 255 255 / 0.07);
+  --sidebar-ring: #5eead4;
 
-  /* ---- Data visualisation ----------------------------------------------
-     Real custom properties rather than `@theme inline` tokens, because the
-     chart library reads them through `var()` at runtime.
+  --surface-1: #ffffff;
+  --surface-2: #f7fbfb;
+  --surface-3: #ecf5f4;
+  --surface-4: #e2efee;
+  --surface-5: #d6e9e7;
 
-     Every chart on the dashboard plots a single series, so this is a
-     sequential (one-hue) scheme, not a categorical one -- which is the safe
-     default and sidesteps the problem the old `--chart-*` set had: its
-     purple and blue measured ΔE 0.4 apart under deuteranopia and 12.4 with
-     normal vision, so the two headline cards were effectively one colour.
-
-     Validated against this surface (#ffffff): series clears the lightness
-     band, the chroma floor and 3:1 contrast. Status steps are fixed and
-     never themed, so a delta cue can never impersonate a series. */
-  --viz-series: #4f46e5;
-  --viz-series-wash: rgb(79 70 229 / 0.1);
-  --viz-grid: #e2e8f0;
-  --viz-axis: #94a3b8;
-  --viz-deemphasis: #cbd5e1;
-  --viz-good: #0ca30c;
-  --viz-critical: #d03b3b;
-
-  /* ---- Material 3: tonal elevation ------------------------------------
-     MD3 expresses elevation as *tone* rather than only shadow: each step up
-     mixes a little more of the theme's primary into the neutral surface.
-     That is why these follow the accent automatically -- `var(--primary)`
-     resolves where it is used.
-
-     Use the ladder for stacking, not decoration: page plane -> card ->
-     raised control -> dialog. Skipping steps flattens the hierarchy. */
-  --surface-1: color-mix(in oklab, #ffffff 99%, var(--primary));
-  --surface-2: color-mix(in oklab, #fbfbfc 97%, var(--primary));
-  --surface-3: color-mix(in oklab, #f6f7f9 95%, var(--primary));
-  --surface-4: color-mix(in oklab, #f1f3f6 93%, var(--primary));
-  --surface-5: color-mix(in oklab, #eceff3 91%, var(--primary));
-
-  /* ---- Material 3: state layers ---------------------------------------
-     A state layer is the accent laid over a control at a fixed opacity, so
-     hover/press read the same on every surface instead of each component
-     inventing its own grey. MD3's values, used verbatim.
-
-     Written as percentages, not the 0.08 the spec quotes: these feed
-     `color-mix()` through Tailwind's opacity modifier, and a bare number
-     there is invalid, so the whole declaration was being dropped and the
-     hover state simply never painted. */
-  --state-hover: 8%;
+  --state-hover: 7%;
   --state-focus: 10%;
   --state-pressed: 10%;
 
-  /* ---- Material 3: shape scale ---------------------------------------- */
-  --shape-xs: 4px;
-  --shape-sm: 8px;
-  --shape-md: 12px;
-  --shape-lg: 16px;
+  /* Shape: the app's 14px cards and 12px controls. */
+  --shape-xs: 6px;
+  --shape-sm: 10px;
+  --shape-md: 14px;
+  --shape-lg: 18px;
   --shape-xl: 28px;
 
-  /* ---- Material 3: motion ---------------------------------------------
-     One easing for entering/exiting, one set of durations. Anything that
-     animates in this panel should pull from here rather than picking its
-     own, so the whole interface moves at one speed. */
-  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
-  --ease-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-emphasized: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-short: 150ms;
   --duration-medium: 250ms;
   --duration-long: 400ms;
 
-  /* Stat-tile accents; the same in light and dark. */
-  --tile-1: #6366f1;
-  --tile-2: #a855f7;
-  --tile-3: #06b6d4;
-  --tile-4: #10b981;
+  /* Icon accents for stat tiles, kept within the brand's family. */
+  --tile-1: #06777d;
+  --tile-2: #2a78d6;
+  --tile-3: #c98500;
+  --tile-4: #7c3aed;
 
-  /* Hero panel.
-
-   Derived from `--sidebar` and `--primary` rather than fixed, so it follows
-   the accent in both light and dark.
-
-   The from-stop is the rail colour, which is dark in both modes -- that is
-   what keeps the white type on it above contrast. */
-  --hero-from: var(--sidebar);
-  --hero-mid: color-mix(in oklab, var(--sidebar) 68%, var(--primary));
-  --hero-to: color-mix(in oklab, var(--primary) 88%, black);
-  --hero-line: color-mix(in oklab, var(--primary) 42%, white);
-  --hero-glow: color-mix(in oklab, var(--primary) 55%, white);
+  --hero-from: #0c2a2c;
+  --hero-mid: #0b4447;
+  --hero-to: #06777d;
+  --hero-line: #5eead4;
+  --hero-glow: #5eead4;
 }
 
 .dark {
-  /* Surfaces are mixed from the primary rather than fixed, so the dark
-     page is tied to the accent instead of sitting on a cold blue-grey. The
-     mix is mostly neutral: not enough to move the contrast the foreground
-     relies on. */
-  --background: color-mix(in oklab, #07070a 86%, var(--primary));
-  --foreground: #e2e8f0;
-  --card: color-mix(in oklab, #101014 88%, var(--primary));
-  --card-foreground: #e2e8f0;
-  --popover: color-mix(in oklab, #101014 88%, var(--primary));
-  --popover-foreground: #e2e8f0;
-  --primary: #818cf8;
-  --primary-foreground: #0b0c0f;
-  --secondary: color-mix(in oklab, #1b1b21 86%, var(--primary));
-  --secondary-foreground: #e2e8f0;
-  --muted: color-mix(in oklab, #1b1b21 86%, var(--primary));
-  --muted-foreground: #94a3b8;
-  --accent: color-mix(in oklab, #1b1b21 86%, var(--primary));
-  --accent-foreground: #818cf8;
-  --destructive: #ef4444;
-  --success: #4ade80;
-  --success-foreground: #052e16;
-  --warning: #fbbf24;
-  --warning-foreground: #451a03;
-  --border: rgba(255, 255, 255, 0.08);
-  --input: rgba(255, 255, 255, 0.12);
-  --ring: #818cf8;
-  --chart-1: #3b82f6;
+  --background: #08120f;
+  --foreground: #e6f5f3;
+  --card: #12201f;
+  --card-foreground: #e6f5f3;
+  --popover: #152624;
+  --popover-foreground: #e6f5f3;
+  --primary: #0e9296;
+  --primary-deep: #0a6c6f;
+  --primary-foreground: #ffffff;
+  --primary-surface: #0c4a4d;
+  --secondary: #182927;
+  --secondary-foreground: #e6f5f3;
+  --muted: #182927;
+  --muted-foreground: #8fadab;
+  --accent: #1a2e2c;
+  --accent-foreground: #5eead4;
+  --destructive: #f87171;
+  --destructive-surface: #4d1f1f;
+  --success: #34d399;
+  --success-surface: #103e2c;
+  --success-foreground: #04302f;
+  --warning: #f59e0b;
+  --warning-surface: #4a3210;
+  --warning-foreground: #04302f;
+  --border: #203a38;
+  --input: #2a4744;
+  --ring: #2dd4bf;
+  --shadow-card: 0 4px 14px rgb(0 0 0 / 0.35);
+  --shadow-raised: 0 12px 32px rgb(0 0 0 / 0.5);
+  --wash: #0d2423;
+
+  --chart-1: #22b3b8;
   --chart-2: #a78bfa;
   --chart-3: #34d399;
   --chart-4: #94a3b8;
   --chart-5: #cbd5e1;
-  --series-1: #3987e5;
-  --series-2: #d95926;
-  --series-3: #199e70;
-  --series-4: #c98500;
-  --sidebar: color-mix(in oklab, #08090c 94%, var(--sidebar-primary));
-  --sidebar-foreground: #cbd5e1;
-  --sidebar-primary: #818cf8;
-  --sidebar-primary-foreground: #0b0c0f;
-  --sidebar-accent: #1f2937;
-  --sidebar-accent-foreground: #e2e8f0;
-  --sidebar-border: rgba(255, 255, 255, 0.08);
-  --sidebar-ring: #818cf8;
+  --series-1: #22b3b8;
+  --series-2: #e2703f;
+  --series-3: #5b9be8;
+  --series-4: #e0a52b;
 
-  /* Stepped for the dark card surface (#111827) and validated against it --
-     not an automatic flip of the light values. Status steps are unchanged by
-     design; both clear 3:1 on this surface too. */
-  --viz-series: #6366f1;
-  --viz-series-wash: rgb(99 102 241 / 0.14);
-  --viz-grid: rgba(255, 255, 255, 0.08);
-  --viz-axis: #64748b;
-  --viz-deemphasis: #334155;
-  --viz-good: #0ca30c;
-  --viz-critical: #d03b3b;
+  --sidebar: #061412;
+  --sidebar-foreground: #a7c4c2;
+  --sidebar-primary: #5eead4;
+  --sidebar-primary-foreground: #04302f;
+  --sidebar-accent: rgb(255 255 255 / 0.05);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 0.06);
+  --sidebar-ring: #5eead4;
 
-  /* Same ladder stepped for the dark surface -- selected, not flipped. */
-  --surface-1: color-mix(in oklab, #131318 92%, var(--primary));
-  --surface-2: color-mix(in oklab, #191920 90%, var(--primary));
-  --surface-3: color-mix(in oklab, #1f1f28 89%, var(--primary));
-  --surface-4: color-mix(in oklab, #25252f 88%, var(--primary));
-  --surface-5: color-mix(in oklab, #2b2b36 87%, var(--primary));
+  --surface-1: #12201f;
+  --surface-2: #152624;
+  --surface-3: #182927;
+  --surface-4: #1d312f;
+  --surface-5: #24403e;
 
-  /* ---- Material 3: state layers ---------------------------------------
-     A state layer is the accent laid over a control at a fixed opacity, so
-     hover/press read the same on every surface instead of each component
-     inventing its own grey. MD3's values, used verbatim.
+  --tile-1: #2dd4bf;
+  --tile-2: #5b9be8;
+  --tile-3: #e0a52b;
+  --tile-4: #a78bfa;
 
-     Written as percentages, not the 0.08 the spec quotes: these feed
-     `color-mix()` through Tailwind's opacity modifier, and a bare number
-     there is invalid, so the whole declaration was being dropped and the
-     hover state simply never painted. */
-  --state-hover: 8%;
-  --state-focus: 10%;
-  --state-pressed: 10%;
+  --hero-from: #061412;
+  --hero-mid: #0b3b3d;
+  --hero-to: #0e9296;
+  --hero-line: #5eead4;
+  --hero-glow: #5eead4;
+}
 
-  /* ---- Material 3: shape scale ---------------------------------------- */
-  --shape-xs: 4px;
-  --shape-sm: 8px;
-  --shape-md: 12px;
-  --shape-lg: 16px;
-  --shape-xl: 28px;
+/* The app's card in one class: hairline border and soft ink shadow on the card surface. */
+@utility surface {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+}
 
-  /* ---- Material 3: motion ---------------------------------------------
-     One easing for entering/exiting, one set of durations. Anything that
-     animates in this panel should pull from here rather than picking its
-     own, so the whole interface moves at one speed. */
-  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
-  --ease-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);
-  --duration-short: 150ms;
-  --duration-medium: 250ms;
-  --duration-long: 400ms;
-
-  /* Hero panel.
-
-   Derived from `--sidebar` and `--primary` rather than fixed, so it follows
-   the accent in both light and dark.
-
-   The from-stop is the rail colour, which is dark in both modes -- that is
-   what keeps the white type on it above contrast. */
-  --hero-from: var(--sidebar);
-  --hero-mid: color-mix(in oklab, var(--sidebar) 68%, var(--primary));
-  --hero-to: color-mix(in oklab, var(--primary) 88%, black);
-  --hero-line: color-mix(in oklab, var(--primary) 42%, white);
-  --hero-glow: color-mix(in oklab, var(--primary) 55%, white);
+/* The app's selected-pill and primary-button fill: teal deepening to the bottom-right. */
+@utility bg-brand {
+  background-image: linear-gradient(135deg, var(--primary), var(--primary-deep));
 }
 
 @layer base {
@@ -337,6 +280,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* The app's backdrop: a teal wash at the top fading into the page. */
+    background-image: linear-gradient(to bottom, var(--wash), var(--background) 420px);
+    background-repeat: no-repeat;
   }
   html {
     @apply font-sans;
@@ -371,10 +317,10 @@
      `py-16` empty states rely on that), because Tailwind emits utilities
      after this layer. */
   th {
-    padding: --spacing(3.5) --spacing(5);
+    padding: --spacing(3) --spacing(5);
   }
   td {
-    padding: --spacing(4) --spacing(5);
+    padding: --spacing(3.5) --spacing(5);
   }
 }
 
@@ -386,9 +332,9 @@
   background: transparent;
 }
 [data-sidebar="content"]::-webkit-scrollbar-thumb {
-  background: #374151;
+  background: rgb(255 255 255 / 0.12);
   border-radius: 9999px;
 }
 [data-sidebar="content"]::-webkit-scrollbar-thumb:hover {
-  background: #4b5563;
+  background: rgb(255 255 255 / 0.2);
 }

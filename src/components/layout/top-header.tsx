@@ -130,9 +130,7 @@ export function TopHeader({ onLogout }: { onLogout: () => void }) {
                 <span
                   aria-current={last ? "page" : undefined}
                   className={
-                    last
-                      ? "truncate text-sm font-medium text-foreground"
-                      : "truncate text-sm text-muted-foreground"
+                    last ? "truncate text-sm font-medium text-foreground" : "truncate text-sm text-muted-foreground"
                   }
                 >
                   {c.label}

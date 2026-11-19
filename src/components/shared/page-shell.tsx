@@ -26,14 +26,14 @@ export function PageHeader({
           <Link
             href={backHref}
             aria-label="Back"
-            className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-(--shape-sm) text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-(--shape-sm) surface text-muted-foreground shadow-none transition-colors hover:border-primary/30 hover:text-primary"
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
         )}
         <div className="min-w-0">
-          <h1 className="truncate text-xl font-semibold text-foreground">{title}</h1>
-          {description && <p className="mt-0.5 truncate text-sm text-muted-foreground">{description}</p>}
+          <h1 className="truncate text-2xl font-bold tracking-tight text-foreground">{title}</h1>
+          {description && <p className="mt-1 truncate text-sm text-muted-foreground">{description}</p>}
         </div>
       </div>
       {/* Wraps rather than overflows: on a phone, search, filters and the main action each take a line. */}
@@ -144,13 +144,13 @@ export function EmptyState({
         <Mascot className="relative mb-5 h-24 w-24 text-primary/40" />
       ) : (
         icon && (
-          <span className="relative mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-surface-3 text-muted-foreground">
+          <span className="relative mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary-surface text-primary dark:text-accent-foreground">
             {icon}
           </span>
         )
       )}
 
-      <p className="relative text-sm font-medium text-foreground">{title}</p>
+      <p className="relative text-[15px] font-semibold text-foreground">{title}</p>
       {description && <p className="relative mt-1 max-w-sm text-sm text-muted-foreground">{description}</p>}
       {action && <div className="relative mt-5">{action}</div>}
     </div>

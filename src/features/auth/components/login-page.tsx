@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Backdrop, CardDoodles, Mascot, Underline } from "@/components/shared/doodles";
+import { BrandMark } from "@/components/layout/app-sidebar";
 
 const HIGHLIGHTS = [
   { icon: Library, label: "Curate the question bank and curriculum" },
@@ -17,12 +18,15 @@ const HIGHLIGHTS = [
   { icon: Wallet, label: "Manage subscriptions, coupons and payments" },
 ];
 
-/** The wordmark; there is no logo asset yet. */
+/** The app's logo beside the wordmark. */
 function Brand({ className = "" }: { className?: string }) {
   return (
-    <p className={`flex items-baseline gap-2 ${className}`}>
-      <span className="text-2xl font-semibold tracking-tight">Shomadhan</span>
-      <span className="text-sm font-medium opacity-60">Admin</span>
+    <p className={`flex items-center gap-3 ${className}`}>
+      <BrandMark className="h-10 w-10" />
+      <span className="flex items-baseline gap-2">
+        <span className="text-2xl font-semibold tracking-tight">Shomadhan</span>
+        <span className="text-sm font-medium opacity-60">Admin</span>
+      </span>
     </p>
   );
 }

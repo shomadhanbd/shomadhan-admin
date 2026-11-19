@@ -12,36 +12,31 @@ interface RowAction {
   destructive?: boolean;
 }
 
-/** The action cluster at the end of a table row, as one segmented control. */
+/** The actions at the end of a table row: an "Open" chip, then quiet icon buttons. */
 export function RowActions({ primary, actions }: { primary?: { label: string; href: string }; actions: RowAction[] }) {
   return (
     <TooltipProvider delay={300}>
-      <div className="inline-flex items-center overflow-hidden rounded-(--shape-sm) border border-border bg-card shadow-xs">
+      <div className="inline-flex items-center gap-1">
         {primary && (
           <Link
             href={primary.href}
-            // `whitespace-nowrap` matters: a two-word label wrapped inside the
-            // segment and pushed the group taller than its icon buttons.
-            className="flex h-8 items-center gap-1 pr-2 pl-3 text-xs font-medium whitespace-nowrap text-foreground transition-colors duration-(--duration-short) hover:bg-primary/(--state-hover) hover:text-primary"
+            // `whitespace-nowrap` keeps a two-word label on one line, level with the icon buttons.
+            className="mr-1 flex h-8 items-center gap-0.5 rounded-(--shape-xs) bg-primary-surface pr-2 pl-3 text-xs font-semibold whitespace-nowrap text-primary transition-colors duration-(--duration-short) hover:bg-primary hover:text-primary-foreground dark:text-accent-foreground"
           >
             {primary.label}
             <ChevronRight className="h-3.5 w-3.5 opacity-60" />
           </Link>
         )}
 
-        {actions.map((a, i) => (
+        {actions.map((a) => (
           <Tooltip key={a.label}>
             <TooltipTrigger
               onClick={a.onClick}
               aria-label={a.label}
-              // Dividers come from a left border on each segment after the
-              // first, so the group keeps one continuous outer edge.
-              className={`flex h-8 w-9 items-center justify-center transition-colors duration-(--duration-short) ${
-                primary || i > 0 ? "border-l border-border" : ""
-              } ${
+              className={`flex h-8 w-8 items-center justify-center rounded-(--shape-xs) transition-colors duration-(--duration-short) ${
                 a.destructive
-                  ? "text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                  : "text-muted-foreground hover:bg-primary/(--state-hover) hover:text-primary"
+                  ? "text-muted-foreground hover:bg-destructive-surface hover:text-destructive"
+                  : "text-muted-foreground hover:bg-accent hover:text-primary"
               }`}
             >
               {a.icon}
