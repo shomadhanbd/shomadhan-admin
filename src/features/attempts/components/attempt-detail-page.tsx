@@ -13,6 +13,7 @@ import { AUTO_MARKED, attemptKeys, attemptsApi } from "@/features/attempts/api";
 import { attemptStatus, isFinished, minutesTaken, score } from "@/features/attempts/constants";
 import { mockTestKeys, mockTestsApi } from "@/features/mock-tests/api";
 import { QUESTION_TYPE_LABELS } from "@/features/question-bank/constants";
+import { keyBlanks } from "@/features/question-bank/components/answer-key";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonClass } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -103,17 +104,40 @@ function Response({ answer, question }: { answer?: AttemptAnswer; question: Bank
     );
   }
 
-  // Blanks and written answers: show what was typed, then the model answer to compare.
-  const blanks = payload.blanks;
-  const typed = Array.isArray(blanks)
-    ? blanks.map(String).join(" · ")
-    : blanks && typeof blanks === "object"
-      ? Object.values(blanks as Record<string, unknown>)
-          .map(String)
-          .join(" · ")
-      : typeof payload.text === "string"
-        ? payload.text
-        : "";
+  if (question.question_type === "fib") {
+    // Each blank as the student filled it, against what the key accepts for it.
+    const given = new Map(
+      (Array.isArray(payload.blanks) ? payload.blanks : []).map((b) => {
+        const blank = (b ?? {}) as Record<string, unknown>;
+        return [String(blank.id ?? ""), typeof blank.answer === "string" ? blank.answer.trim() : ""];
+      }),
+    );
+    return (
+      <ol className="space-y-1 text-sm">
+        {keyBlanks(question.metadata, question.options).map((blank) => {
+          const typed = given.get(blank.id) ?? "";
+          const right = blank.answers.some((a) => a.toLowerCase() === typed.toLowerCase());
+          return (
+            <li key={blank.id} className="flex flex-wrap items-baseline gap-x-2">
+              <span className="w-6 shrink-0 font-medium text-muted-foreground">({blank.id})</span>
+              <span
+                className={cn(
+                  "font-medium",
+                  !typed ? "text-muted-foreground" : right ? "text-success" : "text-destructive",
+                )}
+              >
+                {typed || "Left empty"}
+              </span>
+              {!right && <span className="text-xs text-muted-foreground">key: {blank.answers.join(", ") || "–"}</span>}
+            </li>
+          );
+        })}
+      </ol>
+    );
+  }
+
+  // Written answers: what was typed, then the model answer to compare.
+  const typed = typeof payload.text === "string" ? payload.text : "";
   return (
     <div className="space-y-2">
       <p

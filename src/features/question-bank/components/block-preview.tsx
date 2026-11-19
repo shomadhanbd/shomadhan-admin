@@ -3,6 +3,7 @@
 import { Check } from "lucide-react";
 import { JSON_METADATA_TYPES, QUESTION_TYPE_LABELS } from "@/features/question-bank/constants";
 import { RichContent } from "@/components/shared/rich-content";
+import { AnswerKey } from "./answer-key";
 import type { BankQuestion } from "@/features/question-bank/types";
 
 /** What the preview needs of one question; ids are strings for a draft that has not been saved yet. */
@@ -64,9 +65,7 @@ export function BlockPreview({ block, number }: { block: PreviewBlock; number?: 
             {JSON_METADATA_TYPES.includes(question.question_type) && Object.keys(question.metadata).length > 0 && (
               <div className="border-l-2 border-border pl-3">
                 <p className="text-[11px] font-medium text-muted-foreground">Answer key</p>
-                <pre className="overflow-x-auto font-mono text-xs whitespace-pre-wrap text-muted-foreground">
-                  {JSON.stringify(question.metadata, null, 2)}
-                </pre>
+                <AnswerKey type={question.question_type} metadata={question.metadata} options={question.options} />
               </div>
             )}
             <p className="text-xs text-muted-foreground">
