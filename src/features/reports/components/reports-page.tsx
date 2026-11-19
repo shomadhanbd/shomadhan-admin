@@ -120,32 +120,32 @@ export function ReportsPage() {
       key: "actions",
       header: "",
       align: "right",
-      width: "170px",
+      width: "56px",
       cell: (r) => {
-        const name = `the report on ${r.block_slug}`;
         const move = (next: ReportStatus) => () => changeStatus.mutate({ report: r, next });
         return (
           <div className="flex justify-end">
             <RowActions
+              name={`the report on ${r.block_slug}`}
               actions={[
                 {
                   icon: <Pencil className="h-4 w-4" />,
-                  label: `Fix question ${r.block_slug}`,
+                  label: "Fix the question",
                   onClick: () => router.push(`/question-bank/${r.block}/edit?report=${r.id}`),
                 },
                 ...(r.status === "open"
                   ? [
                       {
                         icon: <Check className="h-4 w-4" />,
-                        label: `Mark ${name} reviewed`,
+                        label: "Mark reviewed",
                         onClick: move("reviewed"),
                       },
-                      { icon: <X className="h-4 w-4" />, label: `Dismiss ${name}`, onClick: move("dismissed") },
+                      { icon: <X className="h-4 w-4" />, label: "Dismiss", onClick: move("dismissed") },
                     ]
-                  : [{ icon: <RotateCcw className="h-4 w-4" />, label: `Reopen ${name}`, onClick: move("open") }]),
+                  : [{ icon: <RotateCcw className="h-4 w-4" />, label: "Reopen", onClick: move("open") }]),
                 {
                   icon: <Trash2 className="h-4 w-4" />,
-                  label: `Delete ${name}`,
+                  label: "Delete",
                   onClick: () => setDeleting(r),
                   destructive: true,
                 },

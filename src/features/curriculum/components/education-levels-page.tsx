@@ -13,7 +13,7 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { FormDialog } from "@/components/shared/form-dialog";
 import { EmptyState, Field, ListToolbar, PageHeader, SearchInput } from "@/components/shared/page-shell";
-import { NameCell, SlugInput, actionsColumn, countColumn } from "./shared";
+import { NameCell, SlugInput, actionsColumn, countColumn, hasStudents } from "./shared";
 import type { EducationLevel } from "@/features/curriculum/types";
 
 const keys = curriculumKeys.educationLevels;
@@ -111,7 +111,7 @@ export function EducationLevelsPage() {
     countColumn("subjects", "Subjects", (l) => l.subject_count, "subject_count"),
     countColumn("chapters", "Chapters", (l) => l.chapter_count),
     countColumn("questions", "Questions", (l) => l.question_count, "question_count"),
-    actionsColumn<EducationLevel>(setEditing, setDeleting),
+    actionsColumn<EducationLevel>(setEditing, setDeleting, hasStudents),
   ];
 
   const filtered = Boolean(search);
@@ -183,7 +183,7 @@ export function EducationLevelsPage() {
         description={
           <>
             <span className="font-medium text-foreground">{deleting?.name}</span> will be removed. A level that still
-            has groups, batches or subjects cannot be deleted.
+            has students, groups, batches or subjects cannot be deleted.
           </>
         }
         confirmLabel="Delete level"

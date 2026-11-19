@@ -120,19 +120,20 @@ export function QuestionBankPage() {
       key: "actions",
       header: "",
       align: "right",
-      width: "90px",
+      width: "56px",
       cell: (b) => (
         <div className="flex justify-end">
           <RowActions
+            name={`question ${b.slug}`}
             actions={[
               {
                 icon: <Pencil className="h-4 w-4" />,
-                label: `Edit ${b.slug}`,
+                label: "Edit",
                 onClick: () => router.push(`/question-bank/${b.id}/edit`),
               },
               {
                 icon: <Trash2 className="h-4 w-4" />,
-                label: `Delete ${b.slug}`,
+                label: "Delete",
                 onClick: () => setDeleting(b),
                 destructive: true,
               },

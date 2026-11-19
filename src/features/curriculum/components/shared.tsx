@@ -33,26 +33,34 @@ export function countColumn<T>(
   };
 }
 
-/** The edit/delete column that ends every curriculum table. */
+/** A level, group or batch can't be deleted while students are placed in it (the backend refuses too). */
+export const hasStudents = (row: { student_count: number }) =>
+  row.student_count ? `${row.student_count} ${row.student_count === 1 ? "student is" : "students are"} in it` : null;
+
+/** The actions menu that ends every curriculum table: edit, then delete. */
 export function actionsColumn<T extends { name: string }>(
   onEdit: (row: T) => void,
   onDelete: (row: T) => void,
+  /** Why a row can't be deleted, if it can't; the delete button then explains instead of asking. */
+  deleteBlockedBy?: (row: T) => string | null,
 ): Column<T> {
   return {
     key: "actions",
     header: "",
     align: "right",
-    width: "110px",
+    width: "56px",
     cell: (row) => (
       <div className="flex justify-end">
         <RowActions
+          name={row.name}
           actions={[
-            { icon: <Pencil className="h-4 w-4" />, label: `Edit ${row.name}`, onClick: () => onEdit(row) },
+            { icon: <Pencil className="h-4 w-4" />, label: "Edit", onClick: () => onEdit(row) },
             {
               icon: <Trash2 className="h-4 w-4" />,
-              label: `Delete ${row.name}`,
+              label: "Delete",
               onClick: () => onDelete(row),
               destructive: true,
+              blockedBy: deleteBlockedBy?.(row),
             },
           ]}
         />

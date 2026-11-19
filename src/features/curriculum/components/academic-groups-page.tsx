@@ -16,7 +16,7 @@ import { DataTable, Pagination, type Column } from "@/components/shared/data-tab
 import { FormDialog } from "@/components/shared/form-dialog";
 import { LookupSelect } from "@/components/shared/lookup-select";
 import { EmptyState, Field, ListToolbar, PageHeader, SearchInput } from "@/components/shared/page-shell";
-import { NameCell, SlugInput, actionsColumn, countColumn } from "./shared";
+import { NameCell, SlugInput, actionsColumn, countColumn, hasStudents } from "./shared";
 import type { AcademicGroup } from "@/features/curriculum/types";
 
 const keys = curriculumKeys.academicGroups;
@@ -144,7 +144,7 @@ export function AcademicGroupsPage() {
     { ...countColumn("students", "Students", (g) => g.student_count, "student_count"), secondary: false },
     countColumn("subjects", "Subjects", (g) => g.subject_count, "subject_count"),
     countColumn("questions", "Questions", (g) => g.question_count, "question_count"),
-    actionsColumn<AcademicGroup>(setEditing, setDeleting),
+    actionsColumn<AcademicGroup>(setEditing, setDeleting, hasStudents),
   ];
 
   const filtered = Boolean(search || level);
@@ -229,7 +229,7 @@ export function AcademicGroupsPage() {
         description={
           <>
             <span className="font-medium text-foreground">{deleting?.name}</span> will be removed. A group that still
-            has subjects cannot be deleted.
+            has students or subjects cannot be deleted.
           </>
         }
         confirmLabel="Delete group"

@@ -265,15 +265,16 @@ export function ProductsPage() {
       key: "actions",
       header: "",
       align: "right",
-      width: "110px",
+      width: "56px",
       cell: (p) => (
         <div className="flex justify-end">
           <RowActions
+            name={p.title}
             actions={[
-              { icon: <Pencil className="h-4 w-4" />, label: `Edit ${p.title}`, onClick: () => setEditing(p) },
+              { icon: <Pencil className="h-4 w-4" />, label: "Edit", onClick: () => setEditing(p) },
               {
                 icon: <Trash2 className="h-4 w-4" />,
-                label: `Delete ${p.title}`,
+                label: "Delete",
                 onClick: () => setDeleting(p),
                 destructive: true,
               },

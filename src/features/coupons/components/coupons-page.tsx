@@ -240,15 +240,16 @@ export function CouponsPage() {
       key: "actions",
       header: "",
       align: "right",
-      width: "110px",
+      width: "56px",
       cell: (c) => (
         <div className="flex justify-end">
           <RowActions
+            name={c.code}
             actions={[
-              { icon: <Pencil className="h-4 w-4" />, label: `Edit ${c.code}`, onClick: () => setEditing(c) },
+              { icon: <Pencil className="h-4 w-4" />, label: "Edit", onClick: () => setEditing(c) },
               {
                 icon: <Trash2 className="h-4 w-4" />,
-                label: `Delete ${c.code}`,
+                label: "Delete",
                 onClick: () => setDeleting(c),
                 destructive: true,
               },

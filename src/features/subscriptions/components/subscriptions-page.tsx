@@ -113,14 +113,15 @@ export function SubscriptionsPage() {
       key: "actions",
       header: "",
       align: "right",
-      width: "70px",
+      width: "56px",
       cell: (s) => (
         <div className="flex justify-end">
           <RowActions
+            name={`${s.user_name || s.user_mobile}'s subscription`}
             actions={[
               {
                 icon: <Pencil className="h-4 w-4" />,
-                label: `Change ${s.user_name || s.user_mobile}'s subscription`,
+                label: "Change",
                 onClick: () => setEditing(s),
               },
             ]}

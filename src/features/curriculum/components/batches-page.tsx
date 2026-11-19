@@ -18,7 +18,7 @@ import { DataTable, Pagination, type Column } from "@/components/shared/data-tab
 import { FormDialog } from "@/components/shared/form-dialog";
 import { LookupSelect } from "@/components/shared/lookup-select";
 import { EmptyState, Field, ListToolbar, PageHeader, SearchInput } from "@/components/shared/page-shell";
-import { NameCell, SlugInput, actionsColumn, countColumn } from "./shared";
+import { NameCell, SlugInput, actionsColumn, countColumn, hasStudents } from "./shared";
 import type { Batch } from "@/features/curriculum/types";
 
 const keys = curriculumKeys.batches;
@@ -142,7 +142,7 @@ export function BatchesPage() {
       width: "110px",
       cell: (b) => (b.is_active ? <Badge variant="success">Active</Badge> : <Badge variant="outline">Inactive</Badge>),
     },
-    actionsColumn<Batch>(setEditing, setDeleting),
+    actionsColumn<Batch>(setEditing, setDeleting, hasStudents),
   ];
 
   const filtered = Boolean(search || level);
@@ -226,8 +226,8 @@ export function BatchesPage() {
         title="Delete this batch?"
         description={
           <>
-            <span className="font-medium text-foreground">{deleting?.name}</span> will be removed, and students in it
-            will have no batch. To keep them, mark it inactive instead.
+            <span className="font-medium text-foreground">{deleting?.name}</span> will be removed. Only a batch with no
+            students in it can be deleted; to retire one in use, mark it inactive instead.
           </>
         }
         confirmLabel="Delete batch"

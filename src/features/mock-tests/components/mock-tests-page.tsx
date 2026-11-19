@@ -132,19 +132,20 @@ export function MockTestsPage() {
       key: "actions",
       header: "",
       align: "right",
-      width: "170px",
+      width: "56px",
       cell: (t) => (
         <div className="flex justify-end">
           <RowActions
+            name={t.title}
             actions={[
               {
                 icon: <Pencil className="h-4 w-4" />,
-                label: `Edit ${t.title}`,
+                label: "Edit",
                 onClick: () => router.push(`/mock-tests/${t.id}/edit`),
               },
               {
                 icon: <Trash2 className="h-4 w-4" />,
-                label: `Delete ${t.title}`,
+                label: "Delete",
                 onClick: () => setDeleting(t),
                 destructive: true,
               },
