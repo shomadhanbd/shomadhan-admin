@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import DOMPurify from "dompurify";
 import katex from "katex";
 import "katex/dist/katex.min.css";
@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { Textarea } from "@/components/ui/textarea";
 import { Field } from "@/components/shared/page-shell";
+import { VisualEditor } from "@/components/shared/visual-editor";
 
 /**
  * A well-formed HTML tag, or a formula: `$$…$$` is display math and `$…$` inline, the delimiters the mobile app
@@ -97,6 +98,30 @@ export function ContentField({
   previewClassName?: string;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
+  // Edited as it reads by default; the HTML view is there for the markup and long formulas.
+  const [mode, setMode] = useState<"visual" | "html">("visual");
+
+  const modeSwitch = (
+    <div role="radiogroup" aria-label={`${label} view`} className="ml-auto flex rounded-(--shape-xs) bg-muted p-0.5">
+      {(["visual", "html"] as const).map((m) => (
+        <button
+          key={m}
+          type="button"
+          role="radio"
+          aria-checked={mode === m}
+          onClick={() => setMode(m)}
+          className={cn(
+            "h-6 rounded-[calc(var(--shape-xs)-2px)] px-2 text-xs transition-colors duration-(--duration-short)",
+            mode === m
+              ? "bg-card font-medium text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {m === "visual" ? "Visual" : "HTML"}
+        </button>
+      ))}
+    </div>
+  );
 
   function wrap(before: string, after: string) {
     const area = ref.current;
@@ -113,36 +138,50 @@ export function ContentField({
   return (
     <Field id={id} label={label} required={required} hint={hint}>
       <div className="overflow-hidden rounded-lg border border-input focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
-        <div
-          role="toolbar"
-          aria-label={`Format ${label}`}
-          className="flex flex-wrap gap-0.5 border-b border-border bg-surface-2 px-1.5 py-1"
-        >
-          {FORMATS.map((format) => (
-            <button
-              key={format.title}
-              type="button"
-              title={format.title}
-              aria-label={format.title}
-              onClick={() => wrap(format.before, format.after)}
-              className={cn(
-                "flex h-7 min-w-7 items-center justify-center rounded-(--shape-xs) px-1.5 text-xs text-muted-foreground transition-colors duration-(--duration-short) hover:bg-primary/(--state-hover) hover:text-foreground",
-                format.className,
-              )}
+        {mode === "visual" ? (
+          <VisualEditor
+            id={id}
+            label={label}
+            value={value}
+            onChange={onChange}
+            minRows={rows}
+            toolbarEnd={modeSwitch}
+          />
+        ) : (
+          <>
+            <div
+              role="toolbar"
+              aria-label={`Format ${label}`}
+              className="flex flex-wrap gap-0.5 border-b border-border bg-surface-2 px-1.5 py-1"
             >
-              {format.label}
-            </button>
-          ))}
-        </div>
-        <Textarea
-          ref={ref}
-          id={id}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          rows={rows}
-          placeholder={placeholder}
-          className="rounded-none border-0 font-mono text-xs shadow-none focus-visible:ring-0"
-        />
+              {FORMATS.map((format) => (
+                <button
+                  key={format.title}
+                  type="button"
+                  title={format.title}
+                  aria-label={format.title}
+                  onClick={() => wrap(format.before, format.after)}
+                  className={cn(
+                    "flex h-7 min-w-7 items-center justify-center rounded-(--shape-xs) px-1.5 text-xs text-muted-foreground transition-colors duration-(--duration-short) hover:bg-primary/(--state-hover) hover:text-foreground",
+                    format.className,
+                  )}
+                >
+                  {format.label}
+                </button>
+              ))}
+              {modeSwitch}
+            </div>
+            <Textarea
+              ref={ref}
+              id={id}
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              rows={rows}
+              placeholder={placeholder}
+              className="rounded-none border-0 font-mono text-xs shadow-none focus-visible:ring-0"
+            />
+          </>
+        )}
       </div>
       {value.trim() && (
         <div className={cn("rounded-(--shape-sm) bg-surface-2 px-3 py-2", previewClassName)}>
