@@ -19,7 +19,7 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { FormDialog } from "@/components/shared/form-dialog";
 import { LookupSelect } from "@/components/shared/lookup-select";
-import { EmptyState, Field, PageHeader, SearchInput } from "@/components/shared/page-shell";
+import { EmptyState, Field, ListToolbar, PageHeader, SearchInput } from "@/components/shared/page-shell";
 import { RowActions } from "@/components/shared/row-actions";
 import type { Coupon, CouponStatus } from "@/features/coupons/types";
 
@@ -167,13 +167,26 @@ export function CouponsPage() {
   const [active, setActive] = useUrlState("active");
   const [editing, setEditing] = useState<Coupon | null | "new">(null);
 
-  const { rows, isLoading, isFetching, search, onSearch, setPage, deleting, setDeleting, remove, pagination } =
-    useCrudList<Coupon>({
-      key: couponKeys.all[0],
-      path: COUPONS,
-      params: { is_active: active },
-      onDeleted: () => toast.success("Coupon deleted"),
-    });
+  const {
+    rows,
+    isLoading,
+    isFetching,
+    search,
+    onSearch,
+    setPage,
+    deleting,
+    setDeleting,
+    remove,
+    pagination,
+    total,
+    sort,
+    onSort,
+  } = useCrudList<Coupon>({
+    key: couponKeys.all[0],
+    path: COUPONS,
+    params: { is_active: active },
+    onDeleted: () => toast.success("Coupon deleted"),
+  });
 
   const planNames = (ids: number[]) =>
     ids.length === 0
@@ -198,16 +211,19 @@ export function CouponsPage() {
       key: "discount",
       header: "Discount",
       align: "right",
+      sortKey: "discount_amount",
+      sortFirst: "desc",
       width: "110px",
       cell: (c) => <span className="text-sm font-medium text-foreground">{money(c.discount_amount)}</span>,
     },
     {
       key: "validity",
       header: "Valid",
+      sortKey: "valid_until",
       secondary: true,
-      width: "200px",
+      width: "230px",
       cell: (c) => (
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm whitespace-nowrap text-muted-foreground">
           {c.valid_from || c.valid_until
             ? `${c.valid_from ? date(c.valid_from) : "Now"} – ${c.valid_until ? date(c.valid_until) : "no end"}`
             : "Always"}
@@ -218,6 +234,8 @@ export function CouponsPage() {
       key: "uses",
       header: "Used",
       align: "right",
+      sortKey: "times_used",
+      sortFirst: "desc",
       width: "100px",
       cell: (c) => (
         <span className="text-sm text-foreground tabular-nums">
@@ -256,6 +274,11 @@ export function CouponsPage() {
   ];
 
   const filtered = Boolean(search || active);
+
+  function clearFilters() {
+    onSearch("");
+    setActive("");
+  }
   const newButton = (size?: "lg") => (
     <Button size={size} onClick={() => setEditing("new")}>
       <Plus className="h-4 w-4" />
@@ -266,6 +289,10 @@ export function CouponsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Coupons" description="Discount codes students enter when they buy a plan">
+        {newButton("lg")}
+      </PageHeader>
+
+      <ListToolbar total={isLoading ? undefined : total} noun="coupons" filtered={filtered} onClear={clearFilters}>
         <SearchInput value={search} onChange={onSearch} placeholder="Search codes…" />
         <LookupSelect
           ariaLabel="Filter by switched on or off"
@@ -279,13 +306,15 @@ export function CouponsPage() {
           allLabel="All coupons"
           className="w-40 bg-card"
         />
-        {newButton("lg")}
-      </PageHeader>
+      </ListToolbar>
 
       <DataTable
         columns={columns}
         rows={rows}
         rowKey={(c) => c.id}
+        sort={sort}
+        onSort={onSort}
+        onRowClick={setEditing}
         loading={isLoading}
         refreshing={isFetching && !isLoading}
         empty={
@@ -294,13 +323,7 @@ export function CouponsPage() {
               icon={<TicketPercent className="h-5 w-5" />}
               title="No coupons match these filters"
               action={
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    onSearch("");
-                    setActive("");
-                  }}
-                >
+                <Button variant="outline" onClick={clearFilters}>
                   Clear filters
                 </Button>
               }

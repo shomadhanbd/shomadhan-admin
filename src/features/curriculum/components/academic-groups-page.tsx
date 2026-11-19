@@ -15,7 +15,7 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { FormDialog } from "@/components/shared/form-dialog";
 import { LookupSelect } from "@/components/shared/lookup-select";
-import { EmptyState, Field, PageHeader, SearchInput } from "@/components/shared/page-shell";
+import { EmptyState, Field, ListToolbar, PageHeader, SearchInput } from "@/components/shared/page-shell";
 import { NameCell, SlugInput, actionsColumn, countColumn } from "./shared";
 import type { AcademicGroup } from "@/features/curriculum/types";
 
@@ -107,17 +107,30 @@ export function AcademicGroupsPage() {
   const [level, setLevel] = useUrlState("level");
   const [editing, setEditing] = useState<AcademicGroup | null | "new">(null);
 
-  const { rows, isLoading, isFetching, search, onSearch, setPage, deleting, setDeleting, remove, pagination } =
-    useCrudList<AcademicGroup>({
-      key: keys.all[0],
-      path: ACADEMIC_GROUPS,
-      params: { education_level: level },
-      onDeleted: () => {
-        queryClient.invalidateQueries({ queryKey: keys.lookup });
-        queryClient.invalidateQueries({ queryKey: curriculumKeys.educationLevels.all });
-        toast.success("Group deleted");
-      },
-    });
+  const {
+    rows,
+    isLoading,
+    isFetching,
+    search,
+    onSearch,
+    setPage,
+    deleting,
+    setDeleting,
+    remove,
+    pagination,
+    total,
+    sort,
+    onSort,
+  } = useCrudList<AcademicGroup>({
+    key: keys.all[0],
+    path: ACADEMIC_GROUPS,
+    params: { education_level: level },
+    onDeleted: () => {
+      queryClient.invalidateQueries({ queryKey: keys.lookup });
+      queryClient.invalidateQueries({ queryKey: curriculumKeys.educationLevels.all });
+      toast.success("Group deleted");
+    },
+  });
 
   const columns: Column<AcademicGroup>[] = [
     { key: "name", header: "Group", cell: (g) => <NameCell name={g.name} /> },
@@ -127,12 +140,17 @@ export function AcademicGroupsPage() {
       width: "180px",
       cell: (g) => <span className="text-sm text-foreground">{g.education_level_name}</span>,
     },
-    countColumn("subjects", "Subjects", (g) => g.subject_count),
-    countColumn("questions", "Questions", (g) => g.question_count),
+    { ...countColumn("students", "Students", (g) => g.student_count, "student_count"), secondary: false },
+    countColumn("subjects", "Subjects", (g) => g.subject_count, "subject_count"),
+    countColumn("questions", "Questions", (g) => g.question_count, "question_count"),
     actionsColumn<AcademicGroup>(setEditing, setDeleting),
   ];
 
   const filtered = Boolean(search || level);
+  function clearFilters() {
+    onSearch("");
+    setLevel("");
+  }
   const newButton = (size?: "lg") => (
     <Button size={size} onClick={() => setEditing("new")}>
       <Plus className="h-4 w-4" />
@@ -143,6 +161,10 @@ export function AcademicGroupsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Academic groups" description="The streams within each education level">
+        {newButton("lg")}
+      </PageHeader>
+
+      <ListToolbar total={isLoading ? undefined : total} noun="groups" filtered={filtered} onClear={clearFilters}>
         <SearchInput value={search} onChange={onSearch} placeholder="Search groups…" />
         <LookupSelect
           ariaLabel="Filter by education level"
@@ -156,13 +178,15 @@ export function AcademicGroupsPage() {
           allLabel="All levels"
           className="w-36"
         />
-        {newButton("lg")}
-      </PageHeader>
+      </ListToolbar>
 
       <DataTable
         columns={columns}
         rows={rows}
         rowKey={(g) => g.id}
+        sort={sort}
+        onSort={onSort}
+        onRowClick={setEditing}
         loading={isLoading}
         refreshing={isFetching && !isLoading}
         empty={
@@ -171,13 +195,7 @@ export function AcademicGroupsPage() {
               icon={<Layers className="h-5 w-5" />}
               title="No groups match these filters"
               action={
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    onSearch("");
-                    setLevel("");
-                  }}
-                >
+                <Button variant="outline" onClick={clearFilters}>
                   Clear filters
                 </Button>
               }

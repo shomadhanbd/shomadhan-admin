@@ -1,6 +1,8 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,6 +16,10 @@ export interface Column<T> {
   /** Hidden below `sm`; use for columns that are context rather than identity. */
   secondary?: boolean;
   width?: string;
+  /** The API's ordering field; set it and the header sorts the list. */
+  sortKey?: string;
+  /** For dates and counts the useful first click is newest or largest first. */
+  sortFirst?: "asc" | "desc";
   cell: (row: T) => React.ReactNode;
 }
 
@@ -26,10 +32,78 @@ interface DataTableProps<T> {
   empty?: React.ReactNode;
   /** Held at reduced opacity during a refetch instead of flashing skeletons. */
   refreshing?: boolean;
+  /** The current `?ordering=` value and its setter, from `useCrudList`. */
+  sort?: string;
+  onSort?: (sort: string) => void;
+  /** The whole row opens this page… */
+  rowHref?: (row: T) => string;
+  /** …or does this, e.g. opens the row's edit dialog. */
+  onRowClick?: (row: T) => void;
+}
+
+/** A click on a control inside the row does its own thing rather than opening the row. */
+const OWN_CLICK = "a, button, input, select, textarea, label, [role=switch], [role=checkbox], [role=menuitem]";
+
+function SortHeader({
+  label,
+  field,
+  first,
+  sort,
+  onSort,
+}: {
+  label: React.ReactNode;
+  field: string;
+  first: "asc" | "desc";
+  sort: string;
+  onSort: (s: string) => void;
+}) {
+  const state = sort === field ? "asc" : sort === `-${field}` ? "desc" : null;
+  const firstValue = first === "desc" ? `-${field}` : field;
+  const secondValue = first === "desc" ? field : `-${field}`;
+  // Cycles the first direction, the other direction, then back to the default order.
+  const next = state === null ? firstValue : sort === firstValue ? secondValue : "";
+  const Icon = state === "asc" ? ArrowUp : state === "desc" ? ArrowDown : ArrowUpDown;
+  return (
+    <button
+      type="button"
+      onClick={() => onSort(next)}
+      aria-label={`Sort by ${typeof label === "string" ? label.toLowerCase() : field}`}
+      className={cn(
+        "-mx-1.5 inline-flex items-center gap-1 rounded-(--shape-xs) px-1.5 py-0.5 transition-colors hover:bg-accent hover:text-foreground",
+        state && "text-foreground",
+      )}
+    >
+      {label}
+      <Icon className={cn("h-3.5 w-3.5", state ? "text-primary" : "opacity-50")} />
+    </button>
+  );
 }
 
 /** The shared data table; a refetch dims the previous rows instead of showing skeletons. */
-export function DataTable<T>({ columns, rows, rowKey, loading, empty, refreshing }: DataTableProps<T>) {
+export function DataTable<T>({
+  columns,
+  rows,
+  rowKey,
+  loading,
+  empty,
+  refreshing,
+  sort = "",
+  onSort,
+  rowHref,
+  onRowClick,
+}: DataTableProps<T>) {
+  const router = useRouter();
+  const clickable = Boolean(rowHref || onRowClick);
+
+  function openRow(row: T, e: React.MouseEvent) {
+    if ((e.target as Element).closest(OWN_CLICK)) return;
+    if (rowHref) {
+      const href = rowHref(row);
+      if (e.metaKey || e.ctrlKey) window.open(href, "_blank");
+      else router.push(href);
+    } else onRowClick?.(row);
+  }
+
   return (
     <div className="overflow-hidden rounded-(--shape-md) surface">
       <div className="overflow-x-auto">
@@ -47,7 +121,17 @@ export function DataTable<T>({ columns, rows, rowKey, loading, empty, refreshing
                     c.secondary ? "hidden sm:table-cell" : "",
                   ].join(" ")}
                 >
-                  {c.header}
+                  {c.sortKey && onSort ? (
+                    <SortHeader
+                      label={c.header}
+                      field={c.sortKey}
+                      first={c.sortFirst ?? "asc"}
+                      sort={sort}
+                      onSort={onSort}
+                    />
+                  ) : (
+                    c.header
+                  )}
                 </th>
               ))}
             </tr>
@@ -75,7 +159,14 @@ export function DataTable<T>({ columns, rows, rowKey, loading, empty, refreshing
               </tr>
             ) : (
               rows.map((row) => (
-                <tr key={rowKey(row)} className="transition-colors duration-(--duration-short) hover:bg-accent/70">
+                <tr
+                  key={rowKey(row)}
+                  onClick={clickable ? (e) => openRow(row, e) : undefined}
+                  className={cn(
+                    "transition-colors duration-(--duration-short) hover:bg-accent/70",
+                    clickable && "cursor-pointer",
+                  )}
+                >
                   {columns.map((c) => (
                     <td
                       key={c.key}

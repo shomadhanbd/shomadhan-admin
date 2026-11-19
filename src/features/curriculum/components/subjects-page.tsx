@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 import { BookOpen, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { apiError } from "@/lib/api-error";
@@ -15,7 +16,7 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { FormDialog } from "@/components/shared/form-dialog";
 import { LookupSelect } from "@/components/shared/lookup-select";
-import { EmptyState, Field, PageHeader, SearchInput } from "@/components/shared/page-shell";
+import { EmptyState, Field, ListToolbar, PageHeader, SearchInput } from "@/components/shared/page-shell";
 import { NameCell, SlugInput, actionsColumn, countColumn } from "./shared";
 import type { Subject } from "@/features/curriculum/types";
 
@@ -132,25 +133,39 @@ export function SubjectsPage() {
   const [editing, setEditing] = useState<Subject | null | "new">(null);
   const groups = useGroupsOf(level);
 
-  const { rows, isLoading, isFetching, search, onSearch, setPage, deleting, setDeleting, remove, pagination } =
-    useCrudList<Subject>({
-      key: keys.all[0],
-      path: SUBJECTS,
-      params: { education_level: level, academic_group: group },
-      onDeleted: () => {
-        queryClient.invalidateQueries({ queryKey: keys.lookup });
-        queryClient.invalidateQueries({ queryKey: curriculumKeys.academicGroups.all });
-        queryClient.invalidateQueries({ queryKey: curriculumKeys.educationLevels.all });
-        toast.success("Subject deleted");
-      },
-    });
+  const {
+    rows,
+    isLoading,
+    isFetching,
+    search,
+    onSearch,
+    setPage,
+    deleting,
+    setDeleting,
+    remove,
+    pagination,
+    total,
+    sort,
+    onSort,
+  } = useCrudList<Subject>({
+    key: keys.all[0],
+    path: SUBJECTS,
+    params: { education_level: level, academic_group: group },
+    onDeleted: () => {
+      queryClient.invalidateQueries({ queryKey: keys.lookup });
+      queryClient.invalidateQueries({ queryKey: curriculumKeys.academicGroups.all });
+      queryClient.invalidateQueries({ queryKey: curriculumKeys.educationLevels.all });
+      toast.success("Subject deleted");
+    },
+  });
 
   const columns: Column<Subject>[] = [
     { key: "name", header: "Subject", cell: (s) => <NameCell name={s.name} /> },
     {
       key: "level",
       header: "Level",
-      width: "140px",
+      secondary: true,
+      width: "120px",
       cell: (s) => <span className="text-sm text-foreground">{s.education_level_name}</span>,
     },
     {
@@ -160,12 +175,41 @@ export function SubjectsPage() {
       width: "140px",
       cell: (s) => <span className="text-sm text-foreground">{s.academic_group_name}</span>,
     },
-    countColumn("chapters", "Chapters", (s) => s.chapter_count),
-    countColumn("questions", "Questions", (s) => s.question_count),
+    {
+      key: "chapters",
+      header: "VIP chapters",
+      align: "right",
+      secondary: true,
+      width: "150px",
+      sortKey: "locked_chapter_count",
+      sortFirst: "desc",
+      cell: (s) =>
+        s.chapter_count === 0 ? (
+          <span className="text-sm text-muted-foreground">No chapters</span>
+        ) : (
+          // Opens the chapters, filtered to this subject, to lock them one by one or all at once.
+          <Link
+            href={`/curriculum/chapters?subject=${s.id}`}
+            className="text-sm whitespace-nowrap text-muted-foreground hover:text-primary hover:underline"
+            title="Manage this subject's chapters"
+          >
+            <span className={s.locked_chapter_count ? "font-medium text-foreground" : undefined}>
+              {s.locked_chapter_count}
+            </span>{" "}
+            of {s.chapter_count}
+          </Link>
+        ),
+    },
+    countColumn("questions", "Questions", (s) => s.question_count, "question_count"),
     actionsColumn<Subject>(setEditing, setDeleting),
   ];
 
   const filtered = Boolean(search || level || group);
+  function clearFilters() {
+    onSearch("");
+    setLevel("");
+    setGroup("");
+  }
   const newButton = (size?: "lg") => (
     <Button size={size} onClick={() => setEditing("new")}>
       <Plus className="h-4 w-4" />
@@ -176,6 +220,10 @@ export function SubjectsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Subjects" description="The subjects of each level and group">
+        {newButton("lg")}
+      </PageHeader>
+
+      <ListToolbar total={isLoading ? undefined : total} noun="subjects" filtered={filtered} onClear={clearFilters}>
         <SearchInput value={search} onChange={onSearch} placeholder="Search subjects…" />
         <LookupSelect
           ariaLabel="Filter by education level"
@@ -202,13 +250,15 @@ export function SubjectsPage() {
           allLabel="All groups"
           className="w-36"
         />
-        {newButton("lg")}
-      </PageHeader>
+      </ListToolbar>
 
       <DataTable
         columns={columns}
         rows={rows}
         rowKey={(s) => s.id}
+        sort={sort}
+        onSort={onSort}
+        onRowClick={setEditing}
         loading={isLoading}
         refreshing={isFetching && !isLoading}
         empty={
@@ -217,14 +267,7 @@ export function SubjectsPage() {
               icon={<BookOpen className="h-5 w-5" />}
               title="No subjects match these filters"
               action={
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    onSearch("");
-                    setLevel("");
-                    setGroup("");
-                  }}
-                >
+                <Button variant="outline" onClick={clearFilters}>
                   Clear filters
                 </Button>
               }

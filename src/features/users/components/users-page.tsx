@@ -13,8 +13,7 @@ import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { LookupSelect } from "@/components/shared/lookup-select";
-import { EmptyState, PageHeader, SearchInput } from "@/components/shared/page-shell";
-import { RowActions } from "@/components/shared/row-actions";
+import { EmptyState, ListToolbar, PageHeader, SearchInput, TimeAgo } from "@/components/shared/page-shell";
 import type { User } from "@/features/users/types";
 
 /** The fixed choices of the status filter, each a set of query params. */
@@ -43,15 +42,17 @@ export function UsersPage() {
     [groups.data, level],
   );
 
-  const { rows, isLoading, isFetching, search, onSearch, setPage, pagination } = useCrudList<User>({
-    key: userKeys.all[0],
-    path: USERS,
-    params: {
-      education_level: level,
-      academic_group: group,
-      ...STATUSES.find((s) => s.id === status)?.params,
+  const { rows, total, isLoading, isFetching, search, onSearch, setPage, sort, onSort, pagination } = useCrudList<User>(
+    {
+      key: userKeys.all[0],
+      path: USERS,
+      params: {
+        education_level: level,
+        academic_group: group,
+        ...STATUSES.find((s) => s.id === status)?.params,
+      },
     },
-  });
+  );
 
   const columns: Column<User>[] = [
     {
@@ -105,11 +106,21 @@ export function UsersPage() {
         ),
     },
     {
+      key: "active",
+      header: "Last active",
+      width: "140px",
+      sortKey: "last_active",
+      sortFirst: "desc",
+      cell: (u) => <TimeAgo value={u.last_active} />,
+    },
+    {
       key: "joined",
       header: "Joined",
       secondary: true,
       width: "130px",
-      cell: (u) => <span className="text-sm text-muted-foreground">{date(u.date_joined)}</span>,
+      sortKey: "date_joined",
+      sortFirst: "desc",
+      cell: (u) => <span className="text-sm whitespace-nowrap text-muted-foreground">{date(u.date_joined)}</span>,
     },
     {
       key: "status",
@@ -122,26 +133,21 @@ export function UsersPage() {
         </div>
       ),
     },
-    {
-      key: "actions",
-      header: "",
-      align: "right",
-      width: "90px",
-      cell: (u) => (
-        <div className="flex justify-end">
-          <RowActions primary={{ label: "Open", href: `/users/${u.id}` }} actions={[]} />
-        </div>
-      ),
-    },
   ];
 
   const filtered = Boolean(search || level || group || status);
+  function clearFilters() {
+    onSearch("");
+    setLevel("");
+    setGroup("");
+    setStatus("");
+  }
 
   return (
     <div className="space-y-6">
       <PageHeader title="Users" description="Everyone with an account; students sign up in the app" />
 
-      <div className="flex flex-wrap items-center gap-2">
+      <ListToolbar total={isLoading ? undefined : total} noun="users" filtered={filtered} onClear={clearFilters}>
         <SearchInput value={search} onChange={onSearch} placeholder="Search name, mobile or email…" />
         <LookupSelect
           ariaLabel="Filter by status"
@@ -180,12 +186,15 @@ export function UsersPage() {
           allLabel="All groups"
           className="w-40 bg-card"
         />
-      </div>
+      </ListToolbar>
 
       <DataTable
         columns={columns}
         rows={rows}
         rowKey={(u) => u.id}
+        rowHref={(u) => `/users/${u.id}`}
+        sort={sort}
+        onSort={onSort}
         loading={isLoading}
         refreshing={isFetching && !isLoading}
         empty={
@@ -194,15 +203,7 @@ export function UsersPage() {
               icon={<Users className="h-5 w-5" />}
               title="No users match these filters"
               action={
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    onSearch("");
-                    setLevel("");
-                    setGroup("");
-                    setStatus("");
-                  }}
-                >
+                <Button variant="outline" onClick={clearFilters}>
                   Clear filters
                 </Button>
               }

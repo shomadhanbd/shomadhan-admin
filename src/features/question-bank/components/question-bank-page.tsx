@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { LookupSelect } from "@/components/shared/lookup-select";
-import { EmptyState, PageHeader, SearchInput } from "@/components/shared/page-shell";
+import { EmptyState, ListToolbar, PageHeader, SearchInput, TimeAgo } from "@/components/shared/page-shell";
 import { RichContent } from "@/components/shared/rich-content";
 import { RowActions } from "@/components/shared/row-actions";
 import type { QuestionBlock } from "@/features/question-bank/types";
@@ -41,18 +41,31 @@ export function QuestionBankPage() {
     enabled: Boolean(subject),
   });
 
-  const { rows, isLoading, isFetching, search, onSearch, setPage, deleting, setDeleting, remove, pagination } =
-    useCrudList<QuestionBlock>({
-      key: questionBlockKeys.all[0],
-      path: QUESTION_BLOCKS,
-      params: { subject, chapter, question_type: type },
-      onDeleted: () => {
-        for (const key of ["chapters", "subjects", "academicGroups", "educationLevels"] as const) {
-          queryClient.invalidateQueries({ queryKey: curriculumKeys[key].all });
-        }
-        toast.success("Question deleted");
-      },
-    });
+  const {
+    rows,
+    total,
+    isLoading,
+    isFetching,
+    search,
+    onSearch,
+    setPage,
+    sort,
+    onSort,
+    deleting,
+    setDeleting,
+    remove,
+    pagination,
+  } = useCrudList<QuestionBlock>({
+    key: questionBlockKeys.all[0],
+    path: QUESTION_BLOCKS,
+    params: { subject, chapter, question_type: type },
+    onDeleted: () => {
+      for (const key of ["chapters", "subjects", "academicGroups", "educationLevels"] as const) {
+        queryClient.invalidateQueries({ queryKey: curriculumKeys[key].all });
+      }
+      toast.success("Question deleted");
+    },
+  });
 
   const columns: Column<QuestionBlock>[] = [
     {
@@ -99,14 +112,22 @@ export function QuestionBankPage() {
       ),
     },
     {
+      key: "updated",
+      header: "Updated",
+      secondary: true,
+      width: "130px",
+      sortKey: "updated_at",
+      sortFirst: "desc",
+      cell: (b) => <TimeAgo value={b.updated_at} className="text-muted-foreground" />,
+    },
+    {
       key: "actions",
       header: "",
       align: "right",
-      width: "110px",
+      width: "90px",
       cell: (b) => (
         <div className="flex justify-end">
           <RowActions
-            primary={{ label: "Open", href: `/question-bank/${b.id}` }}
             actions={[
               {
                 icon: <Pencil className="h-4 w-4" />,
@@ -127,6 +148,12 @@ export function QuestionBankPage() {
   ];
 
   const filtered = Boolean(search || subject || chapter || type);
+  function clearFilters() {
+    onSearch("");
+    setSubject("");
+    setChapter("");
+    setType("");
+  }
   const newButton = (size?: "lg") => (
     <Button
       size={size}
@@ -147,8 +174,7 @@ export function QuestionBankPage() {
         {newButton("lg")}
       </PageHeader>
 
-      {/* A row of their own: four controls do not fit beside the title on a laptop screen. */}
-      <div className="flex flex-wrap items-center gap-2">
+      <ListToolbar total={isLoading ? undefined : total} noun="questions" filtered={filtered} onClear={clearFilters}>
         <SearchInput value={search} onChange={onSearch} placeholder="Search question text…" />
         <LookupSelect
           ariaLabel="Filter by subject"
@@ -188,12 +214,15 @@ export function QuestionBankPage() {
           allLabel="All types"
           className="w-44 bg-card"
         />
-      </div>
+      </ListToolbar>
 
       <DataTable
         columns={columns}
         rows={rows}
         rowKey={(b) => b.id}
+        rowHref={(b) => `/question-bank/${b.id}`}
+        sort={sort}
+        onSort={onSort}
         loading={isLoading}
         refreshing={isFetching && !isLoading}
         empty={
@@ -202,15 +231,7 @@ export function QuestionBankPage() {
               icon={<Library className="h-5 w-5" />}
               title="No questions match these filters"
               action={
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    onSearch("");
-                    setSubject("");
-                    setChapter("");
-                    setType("");
-                  }}
-                >
+                <Button variant="outline" onClick={clearFilters}>
                   Clear filters
                 </Button>
               }

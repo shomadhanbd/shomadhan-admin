@@ -18,7 +18,7 @@ import { PersonAvatar } from "@/components/shared/person-avatar";
 import { Button } from "@/components/ui/button";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { LookupSelect } from "@/components/shared/lookup-select";
-import { EmptyState, PageHeader, SearchInput } from "@/components/shared/page-shell";
+import { EmptyState, ListToolbar, PageHeader, SearchInput } from "@/components/shared/page-shell";
 import { RowActions } from "@/components/shared/row-actions";
 import type { Subscription } from "@/features/subscriptions/types";
 import { EditSubscriptionDialog, GrantDialog } from "./subscription-dialogs";
@@ -55,11 +55,12 @@ export function SubscriptionsPage() {
   const [editing, setEditing] = useState<Subscription | null>(null);
   const [granting, setGranting] = useState(false);
 
-  const { rows, isLoading, isFetching, search, onSearch, setPage, pagination } = useCrudList<Subscription>({
-    key: subscriptionKeys.all[0],
-    path: SUBSCRIPTIONS,
-    params: { status, source },
-  });
+  const { rows, isLoading, isFetching, search, onSearch, setPage, pagination, total, sort, onSort } =
+    useCrudList<Subscription>({
+      key: subscriptionKeys.all[0],
+      path: SUBSCRIPTIONS,
+      params: { status, source },
+    });
 
   const columns: Column<Subscription>[] = [
     {
@@ -86,6 +87,7 @@ export function SubscriptionsPage() {
     {
       key: "period",
       header: "VIP until",
+      sortKey: "expires_at",
       width: "150px",
       cell: (s) => (
         <div>
@@ -129,6 +131,12 @@ export function SubscriptionsPage() {
   ];
 
   const filtered = Boolean(search || status || source);
+
+  function clearFilters() {
+    onSearch("");
+    setStatus("");
+    setSource("");
+  }
   const grantButton = (size?: "lg") => (
     <Button size={size} onClick={() => setGranting(true)}>
       <Plus className="h-4 w-4" />
@@ -139,6 +147,15 @@ export function SubscriptionsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Subscriptions" description="Who has VIP and until when, whether bought or granted by hand">
+        {grantButton("lg")}
+      </PageHeader>
+
+      <ListToolbar
+        total={isLoading ? undefined : total}
+        noun="subscriptions"
+        filtered={filtered}
+        onClear={clearFilters}
+      >
         <SearchInput value={search} onChange={onSearch} placeholder="Search name or mobile…" />
         <LookupSelect
           ariaLabel="Filter by status"
@@ -164,13 +181,15 @@ export function SubscriptionsPage() {
           allLabel="All sources"
           className="w-44 bg-card"
         />
-        {grantButton("lg")}
-      </PageHeader>
+      </ListToolbar>
 
       <DataTable
         columns={columns}
         rows={rows}
         rowKey={(s) => s.id}
+        sort={sort}
+        onSort={onSort}
+        onRowClick={setEditing}
         loading={isLoading}
         refreshing={isFetching && !isLoading}
         empty={
@@ -180,14 +199,7 @@ export function SubscriptionsPage() {
             description="A subscription appears when a student pays for a plan, or when you grant VIP by hand."
             action={
               filtered ? (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    onSearch("");
-                    setStatus("");
-                    setSource("");
-                  }}
-                >
+                <Button variant="outline" onClick={clearFilters}>
                   Clear filters
                 </Button>
               ) : (

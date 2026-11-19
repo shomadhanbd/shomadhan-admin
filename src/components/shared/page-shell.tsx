@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { ArrowLeft, Search, X } from "lucide-react";
+import { ago, dateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EmptyDoodles, Mascot } from "./doodles";
@@ -154,5 +156,56 @@ export function EmptyState({
       {description && <p className="relative mt-1 max-w-sm text-sm text-muted-foreground">{description}</p>}
       {action && <div className="relative mt-5">{action}</div>}
     </div>
+  );
+}
+
+/** "batches" → "batch", "users" → "user": enough for the nouns the lists use. */
+const singular = (noun: string) => (/(ch|sh|x)es$/.test(noun) ? noun.slice(0, -2) : noun.replace(/s$/, ""));
+
+/**
+ * The row of search and filters under a list's title, with how many rows match and a way to
+ * clear what is set. Every list uses it, so the controls always sit in the same place.
+ */
+export function ListToolbar({
+  children,
+  total,
+  noun,
+  filtered,
+  onClear,
+}: {
+  children: React.ReactNode;
+  /** Rows matching now; hidden until the first load answers. */
+  total?: number;
+  /** Plural, e.g. "users"; the singular drops the trailing "s". */
+  noun: string;
+  filtered: boolean;
+  onClear: () => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      {children}
+      {filtered && (
+        <Button variant="ghost" size="lg" onClick={onClear} className="text-muted-foreground">
+          <X className="h-4 w-4" />
+          Clear
+        </Button>
+      )}
+      {total !== undefined && (
+        <span className="ml-auto text-sm text-muted-foreground tabular-nums">
+          {total.toLocaleString()} {total === 1 ? singular(noun) : noun}
+          {filtered ? " match" : ""}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/** "3 hours ago", with the exact moment on hover. */
+export function TimeAgo({ value, className }: { value: string | null | undefined; className?: string }) {
+  if (!value) return <span className={cn("text-sm text-muted-foreground", className)}>Never</span>;
+  return (
+    <time dateTime={value} title={dateTime(value)} className={cn("text-sm whitespace-nowrap", className)}>
+      {ago(value)}
+    </time>
   );
 }

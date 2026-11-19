@@ -63,3 +63,23 @@ export function plainText(html: string | null | undefined): string {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+const RELATIVE = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+const STEPS: [Intl.RelativeTimeFormatUnit, number][] = [
+  ["year", 365 * 24 * 3600],
+  ["month", 30 * 24 * 3600],
+  ["week", 7 * 24 * 3600],
+  ["day", 24 * 3600],
+  ["hour", 3600],
+  ["minute", 60],
+];
+
+/** `3 hours ago`, `yesterday`, `in 2 days`; `just now` under a minute. */
+export function ago(value: string | null | undefined): string {
+  if (!value) return "—";
+  const seconds = (new Date(value).getTime() - Date.now()) / 1000;
+  if (Number.isNaN(seconds)) return "—";
+  if (Math.abs(seconds) < 60) return "just now";
+  const [unit, size] = STEPS.find(([, s]) => Math.abs(seconds) >= s) ?? STEPS[STEPS.length - 1];
+  return RELATIVE.format(Math.round(seconds / size), unit);
+}

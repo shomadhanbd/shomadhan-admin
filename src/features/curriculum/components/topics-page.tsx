@@ -15,7 +15,7 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { FormDialog } from "@/components/shared/form-dialog";
 import { LookupSelect } from "@/components/shared/lookup-select";
-import { EmptyState, Field, PageHeader, SearchInput } from "@/components/shared/page-shell";
+import { EmptyState, Field, ListToolbar, PageHeader, SearchInput } from "@/components/shared/page-shell";
 import { NameCell, SlugInput, actionsColumn } from "./shared";
 import type { Topic } from "@/features/curriculum/types";
 
@@ -132,26 +132,50 @@ export function TopicsPage() {
   const [subject, setSubject] = useUrlState("subject");
   const [editing, setEditing] = useState<Topic | null | "new">(null);
 
-  const { rows, isLoading, isFetching, search, onSearch, setPage, deleting, setDeleting, remove, pagination } =
-    useCrudList<Topic>({
-      key: keys.all[0],
-      path: TOPICS,
-      params: { chapter__subject: subject },
-      onDeleted: () => toast.success("Topic deleted"),
-    });
+  const {
+    rows,
+    isLoading,
+    isFetching,
+    search,
+    onSearch,
+    setPage,
+    deleting,
+    setDeleting,
+    remove,
+    pagination,
+    total,
+    sort,
+    onSort,
+  } = useCrudList<Topic>({
+    key: keys.all[0],
+    path: TOPICS,
+    params: { chapter__subject: subject },
+    onDeleted: () => toast.success("Topic deleted"),
+  });
 
   const columns: Column<Topic>[] = [
     { key: "name", header: "Topic", cell: (t) => <NameCell name={t.name} /> },
     {
       key: "chapter",
       header: "Chapter",
-      width: "280px",
-      cell: (t) => <span className="text-sm text-foreground">{t.chapter_name}</span>,
+      width: "300px",
+      cell: (t) => (
+        <div className="min-w-0">
+          <p className="line-clamp-1 text-sm text-foreground">
+            <span className="text-muted-foreground">{t.chapter_number}.</span> {t.chapter_name}
+          </p>
+          <p className="line-clamp-1 text-xs text-muted-foreground">{t.subject_name}</p>
+        </div>
+      ),
     },
     actionsColumn<Topic>(setEditing, setDeleting),
   ];
 
   const filtered = Boolean(search || subject);
+  function clearFilters() {
+    onSearch("");
+    setSubject("");
+  }
   const newButton = (size?: "lg") => (
     <Button size={size} onClick={() => setEditing("new")}>
       <Plus className="h-4 w-4" />
@@ -162,6 +186,10 @@ export function TopicsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Topics" description="The topics within each chapter">
+        {newButton("lg")}
+      </PageHeader>
+
+      <ListToolbar total={isLoading ? undefined : total} noun="topics" filtered={filtered} onClear={clearFilters}>
         <SearchInput value={search} onChange={onSearch} placeholder="Search topics…" />
         <LookupSelect
           ariaLabel="Filter by subject"
@@ -175,13 +203,15 @@ export function TopicsPage() {
           allLabel="All subjects"
           className="w-44"
         />
-        {newButton("lg")}
-      </PageHeader>
+      </ListToolbar>
 
       <DataTable
         columns={columns}
         rows={rows}
         rowKey={(t) => t.id}
+        sort={sort}
+        onSort={onSort}
+        onRowClick={setEditing}
         loading={isLoading}
         refreshing={isFetching && !isLoading}
         empty={
@@ -190,13 +220,7 @@ export function TopicsPage() {
               icon={<Tags className="h-5 w-5" />}
               title="No topics match these filters"
               action={
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    onSearch("");
-                    setSubject("");
-                  }}
-                >
+                <Button variant="outline" onClick={clearFilters}>
                   Clear filters
                 </Button>
               }

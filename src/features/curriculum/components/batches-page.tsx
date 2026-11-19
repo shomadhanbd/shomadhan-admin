@@ -17,8 +17,8 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { FormDialog } from "@/components/shared/form-dialog";
 import { LookupSelect } from "@/components/shared/lookup-select";
-import { EmptyState, Field, PageHeader, SearchInput } from "@/components/shared/page-shell";
-import { NameCell, SlugInput, actionsColumn } from "./shared";
+import { EmptyState, Field, ListToolbar, PageHeader, SearchInput } from "@/components/shared/page-shell";
+import { NameCell, SlugInput, actionsColumn, countColumn } from "./shared";
 import type { Batch } from "@/features/curriculum/types";
 
 const keys = curriculumKeys.batches;
@@ -100,16 +100,29 @@ export function BatchesPage() {
   const [level, setLevel] = useUrlState("level");
   const [editing, setEditing] = useState<Batch | null | "new">(null);
 
-  const { rows, isLoading, isFetching, search, onSearch, setPage, deleting, setDeleting, remove, pagination } =
-    useCrudList<Batch>({
-      key: keys.all[0],
-      path: BATCHES,
-      params: { education_level: level },
-      onDeleted: () => {
-        queryClient.invalidateQueries({ queryKey: keys.lookup });
-        toast.success("Batch deleted");
-      },
-    });
+  const {
+    rows,
+    isLoading,
+    isFetching,
+    search,
+    onSearch,
+    setPage,
+    deleting,
+    setDeleting,
+    remove,
+    pagination,
+    total,
+    sort,
+    onSort,
+  } = useCrudList<Batch>({
+    key: keys.all[0],
+    path: BATCHES,
+    params: { education_level: level },
+    onDeleted: () => {
+      queryClient.invalidateQueries({ queryKey: keys.lookup });
+      toast.success("Batch deleted");
+    },
+  });
 
   const columns: Column<Batch>[] = [
     { key: "name", header: "Batch", cell: (b) => <NameCell name={b.name} /> },
@@ -119,18 +132,22 @@ export function BatchesPage() {
       width: "180px",
       cell: (b) => <span className="text-sm text-foreground">{b.education_level_name}</span>,
     },
+    { ...countColumn("students", "Students", (b) => b.student_count, "student_count"), secondary: false },
     {
       key: "is_active",
       header: "Active",
       secondary: true,
       width: "110px",
-      cell: (b) =>
-        b.is_active ? <Badge variant="secondary">Active</Badge> : <Badge variant="outline">Inactive</Badge>,
+      cell: (b) => (b.is_active ? <Badge variant="success">Active</Badge> : <Badge variant="outline">Inactive</Badge>),
     },
     actionsColumn<Batch>(setEditing, setDeleting),
   ];
 
   const filtered = Boolean(search || level);
+  function clearFilters() {
+    onSearch("");
+    setLevel("");
+  }
   const newButton = (size?: "lg") => (
     <Button size={size} onClick={() => setEditing("new")}>
       <Plus className="h-4 w-4" />
@@ -141,6 +158,10 @@ export function BatchesPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Batches" description="Cohorts of students, one per level and year">
+        {newButton("lg")}
+      </PageHeader>
+
+      <ListToolbar total={isLoading ? undefined : total} noun="batches" filtered={filtered} onClear={clearFilters}>
         <SearchInput value={search} onChange={onSearch} placeholder="Search batches…" />
         <LookupSelect
           ariaLabel="Filter by education level"
@@ -154,13 +175,15 @@ export function BatchesPage() {
           allLabel="All levels"
           className="w-36"
         />
-        {newButton("lg")}
-      </PageHeader>
+      </ListToolbar>
 
       <DataTable
         columns={columns}
         rows={rows}
         rowKey={(b) => b.id}
+        sort={sort}
+        onSort={onSort}
+        onRowClick={setEditing}
         loading={isLoading}
         refreshing={isFetching && !isLoading}
         empty={
@@ -169,13 +192,7 @@ export function BatchesPage() {
               icon={<Users2 className="h-5 w-5" />}
               title="No batches match these filters"
               action={
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    onSearch("");
-                    setLevel("");
-                  }}
-                >
+                <Button variant="outline" onClick={clearFilters}>
                   Clear filters
                 </Button>
               }

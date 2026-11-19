@@ -18,7 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { LookupSelect } from "@/components/shared/lookup-select";
-import { EmptyState, PageHeader, SearchInput } from "@/components/shared/page-shell";
+import { EmptyState, ListToolbar, PageHeader, SearchInput } from "@/components/shared/page-shell";
 import { RowActions } from "@/components/shared/row-actions";
 import type { MockTest } from "@/features/mock-tests/types";
 
@@ -29,13 +29,26 @@ export function MockTestsPage() {
   /** The test whose published switch was flicked, while the admin confirms. */
   const [toggling, setToggling] = useState<MockTest | null>(null);
 
-  const { rows, isLoading, isFetching, search, onSearch, setPage, deleting, setDeleting, remove, pagination } =
-    useCrudList<MockTest>({
-      key: mockTestKeys.all[0],
-      path: MOCK_TESTS,
-      params: { status },
-      onDeleted: () => toast.success("Mock test deleted"),
-    });
+  const {
+    rows,
+    isLoading,
+    isFetching,
+    search,
+    onSearch,
+    setPage,
+    deleting,
+    setDeleting,
+    remove,
+    pagination,
+    total,
+    sort,
+    onSort,
+  } = useCrudList<MockTest>({
+    key: mockTestKeys.all[0],
+    path: MOCK_TESTS,
+    params: { status },
+    onDeleted: () => toast.success("Mock test deleted"),
+  });
 
   const publish = useMutation({
     mutationFn: (test: MockTest) => mockTestsApi.update(test.id, { is_published: !test.is_published }),
@@ -50,6 +63,8 @@ export function MockTestsPage() {
     {
       key: "test",
       header: "Test",
+      sortKey: "start_time",
+      sortFirst: "desc",
       // The schedule shares this cell rather than taking a column, so the table fits a laptop screen.
       cell: (t) => (
         <div className="min-w-0">
@@ -76,16 +91,28 @@ export function MockTestsPage() {
     {
       key: "paper",
       header: "Paper",
-      align: "right",
       secondary: true,
-      width: "110px",
+      width: "150px",
       cell: (t) => (
-        <div>
-          <p className="text-sm text-foreground">
-            {t.question_count} {t.question_count === 1 ? "question" : "questions"}
-          </p>
-          <p className="text-xs text-muted-foreground">{marksLabel(Number(t.total_marks))}</p>
-        </div>
+        <span className="text-sm whitespace-nowrap text-foreground">
+          {t.question_count} Q <span className="text-muted-foreground">· {marksLabel(Number(t.total_marks))}</span>
+        </span>
+      ),
+    },
+    {
+      key: "taken",
+      header: "Taken",
+      align: "right",
+      width: "90px",
+      sortKey: "attempt_count",
+      sortFirst: "desc",
+      cell: (t) => (
+        <span
+          className={t.attempt_count ? "text-sm text-foreground" : "text-sm text-muted-foreground"}
+          title={`${t.attempt_count} submitted ${t.attempt_count === 1 ? "paper" : "papers"}`}
+        >
+          {t.attempt_count}
+        </span>
       ),
     },
     {
@@ -109,7 +136,6 @@ export function MockTestsPage() {
       cell: (t) => (
         <div className="flex justify-end">
           <RowActions
-            primary={{ label: "Open", href: `/mock-tests/${t.id}` }}
             actions={[
               {
                 icon: <Pencil className="h-4 w-4" />,
@@ -130,6 +156,11 @@ export function MockTestsPage() {
   ];
 
   const filtered = Boolean(search || status);
+
+  function clearFilters() {
+    onSearch("");
+    setStatus("");
+  }
   const newButton = (size?: "lg") => (
     <Button size={size} onClick={() => router.push("/mock-tests/new")}>
       <Plus className="h-4 w-4" />
@@ -140,6 +171,10 @@ export function MockTestsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Mock tests" description="Scheduled tests shown to a chosen audience">
+        {newButton("lg")}
+      </PageHeader>
+
+      <ListToolbar total={isLoading ? undefined : total} noun="mock tests" filtered={filtered} onClear={clearFilters}>
         <SearchInput value={search} onChange={onSearch} placeholder="Search mock tests…" />
         <LookupSelect
           ariaLabel="Filter by exam status"
@@ -153,13 +188,15 @@ export function MockTestsPage() {
           allLabel="All exam statuses"
           className="w-44 bg-card"
         />
-        {newButton("lg")}
-      </PageHeader>
+      </ListToolbar>
 
       <DataTable
         columns={columns}
         rows={rows}
         rowKey={(t) => t.id}
+        sort={sort}
+        onSort={onSort}
+        rowHref={(t) => `/mock-tests/${t.id}`}
         loading={isLoading}
         refreshing={isFetching && !isLoading}
         empty={
@@ -168,13 +205,7 @@ export function MockTestsPage() {
               icon={<ClipboardList className="h-5 w-5" />}
               title="No mock tests match these filters"
               action={
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    onSearch("");
-                    setStatus("");
-                  }}
-                >
+                <Button variant="outline" onClick={clearFilters}>
                   Clear filters
                 </Button>
               }

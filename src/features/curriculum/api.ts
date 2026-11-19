@@ -5,6 +5,7 @@ import type {
   Chapter,
   ChapterBody,
   EducationLevelBody,
+  Subject,
   SubjectBody,
   Topic,
   TopicBody,
@@ -43,7 +44,13 @@ const writes = <Body>(path: string) => ({
 export const educationLevelsApi = writes<EducationLevelBody>(EDUCATION_LEVELS);
 export const academicGroupsApi = writes<AcademicGroupBody>(ACADEMIC_GROUPS);
 export const batchesApi = writes<BatchBody>(BATCHES);
-export const subjectsApi = writes<SubjectBody>(SUBJECTS);
+export const subjectsApi = {
+  ...writes<SubjectBody>(SUBJECTS),
+  get: async (id: number) => (await api.get<Subject>(`${SUBJECTS}${id}/`)).data,
+  /** Lock or free every chapter of one subject; resolves to how many changed. */
+  setChapterAccess: async (id: number, isLocked: boolean) =>
+    (await api.post<{ updated: number }>(`${SUBJECTS}${id}/chapter-access/`, { is_locked: isLocked })).data,
+};
 export const topicsApi = {
   ...writes<TopicBody>(TOPICS),
   /** Every topic of one chapter, for the question editor's topic picker. */

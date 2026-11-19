@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Check, Flag, Pencil, RotateCcw, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
-import { date, plainText } from "@/lib/format";
+import { plainText } from "@/lib/format";
 import { QUESTION_TYPE_LABELS } from "@/features/question-bank/constants";
 import { REPORTS, reportKeys, reportsApi } from "@/features/reports/api";
 import { REPORT_REASONS, REPORT_REASON_LABELS, REPORT_STATUSES } from "@/features/reports/constants";
@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { LookupSelect } from "@/components/shared/lookup-select";
-import { EmptyState, PageHeader, SearchInput } from "@/components/shared/page-shell";
+import { EmptyState, ListToolbar, PageHeader, SearchInput, TimeAgo } from "@/components/shared/page-shell";
 import { RichContent } from "@/components/shared/rich-content";
 import { RowActions } from "@/components/shared/row-actions";
 import type { Report, ReportStatus } from "@/features/reports/types";
@@ -34,13 +34,26 @@ export function ReportsPage() {
   const [reason, setReason] = useUrlState("reason");
   const router = useRouter();
 
-  const { rows, isLoading, isFetching, search, onSearch, setPage, deleting, setDeleting, remove, pagination } =
-    useCrudList<Report>({
-      key: reportKeys.all[0],
-      path: REPORTS,
-      params: { status, reason },
-      onDeleted: () => toast.success("Report deleted"),
-    });
+  const {
+    rows,
+    total,
+    isLoading,
+    isFetching,
+    search,
+    onSearch,
+    setPage,
+    sort,
+    onSort,
+    deleting,
+    setDeleting,
+    remove,
+    pagination,
+  } = useCrudList<Report>({
+    key: reportKeys.all[0],
+    path: REPORTS,
+    params: { status, reason },
+    onDeleted: () => toast.success("Report deleted"),
+  });
 
   const changeStatus = useMutation({
     mutationFn: ({ report, next }: { report: Report; next: ReportStatus }) => reportsApi.setStatus(report.id, next),
@@ -77,15 +90,17 @@ export function ReportsPage() {
     },
     {
       key: "user",
-      header: "Reported by",
+      header: "Reported",
       secondary: true,
       width: "170px",
+      sortKey: "created_at",
+      sortFirst: "desc",
       cell: (r) => (
         <div className="min-w-0">
           <Link href={`/users/${r.user}`} className="block truncate text-sm text-foreground hover:text-primary">
             {r.user_name || r.user_mobile || "—"}
           </Link>
-          <p className="truncate text-xs text-muted-foreground">{date(r.created_at)}</p>
+          <TimeAgo value={r.created_at} className="text-xs text-muted-foreground" />
         </div>
       ),
     },
@@ -142,11 +157,19 @@ export function ReportsPage() {
     },
   ];
 
-  const filtered = Boolean(search || status || reason);
+  // Open reports are the default view, so only a change from it counts as filtering.
+  const filtered = Boolean(search || reason || status !== "open");
+  function clearFilters() {
+    onSearch("");
+    setStatus("open");
+    setReason("");
+  }
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Reports" description="Problems students have flagged on questions">
+      <PageHeader title="Reports" description="Problems students have flagged on questions" />
+
+      <ListToolbar total={isLoading ? undefined : total} noun="reports" filtered={filtered} onClear={clearFilters}>
         <SearchInput value={search} onChange={onSearch} placeholder="Search reports…" />
         <LookupSelect
           ariaLabel="Filter by status"
@@ -172,12 +195,14 @@ export function ReportsPage() {
           allLabel="All reasons"
           className="w-36 bg-card"
         />
-      </PageHeader>
+      </ListToolbar>
 
       <DataTable
         columns={columns}
         rows={rows}
         rowKey={(r) => r.id}
+        sort={sort}
+        onSort={onSort}
         loading={isLoading}
         refreshing={isFetching && !isLoading}
         empty={
@@ -193,14 +218,7 @@ export function ReportsPage() {
               icon={<Flag className="h-5 w-5" />}
               title={filtered ? "No reports match these filters" : "No reports yet"}
               action={
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    onSearch("");
-                    setStatus("open");
-                    setReason("");
-                  }}
-                >
+                <Button variant="outline" onClick={clearFilters}>
                   Back to open reports
                 </Button>
               }

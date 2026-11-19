@@ -17,6 +17,8 @@ export interface User {
   is_staff: boolean;
   has_active_subscription: boolean;
   subscription_expires_at: string | null;
+  /** The latest practice answer; null for someone who has never practised. */
+  last_active: string | null;
   date_joined: string;
   last_login: string | null;
 }

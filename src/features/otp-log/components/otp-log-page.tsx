@@ -3,18 +3,17 @@
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { Lock, MessageSquareOff, MessageSquareText, ShieldCheck } from "lucide-react";
-import { dateTime } from "@/lib/format";
+
 import { OTP_REQUESTS, otpApi, otpKeys } from "@/features/otp-log/api";
 import { OTP_STATUSES, otpStatus } from "@/features/otp-log/constants";
 import { StatTile } from "@/features/dashboard/components/stat-tile";
 import { useCrudList } from "@/hooks/use-crud-list";
 import { useUrlRange, useUrlState } from "@/hooks/use-url-state";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { DateRange } from "@/components/shared/date-range";
 import { LookupSelect } from "@/components/shared/lookup-select";
-import { EmptyState, PageHeader, SearchInput } from "@/components/shared/page-shell";
+import { EmptyState, ListToolbar, PageHeader, SearchInput, TimeAgo } from "@/components/shared/page-shell";
 import type { OtpRequest } from "@/features/otp-log/types";
 
 /** `/otp-log`: every OTP SMS sent, for spotting abuse, SMS spend and students stuck at sign-in. Read-only. */
@@ -75,8 +74,10 @@ export function OtpLogPage() {
     {
       key: "sent",
       header: "Sent",
-      width: "180px",
-      cell: (o) => <span className="text-sm text-foreground">{dateTime(o.created_at)}</span>,
+      width: "150px",
+      sortKey: "created_at",
+      sortFirst: "desc",
+      cell: (o) => <TimeAgo value={o.created_at} />,
     },
     {
       key: "tries",
@@ -148,7 +149,18 @@ export function OtpLogPage() {
         />
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <ListToolbar
+        total={list.isLoading ? undefined : list.total}
+        noun="codes"
+        filtered={filtered}
+        onClear={() =>
+          filter(() => {
+            list.onSearch("");
+            setStatus("");
+            setRange({ from: "", to: "" });
+          })
+        }
+      >
         <SearchInput value={list.search} onChange={list.onSearch} placeholder="Search mobile or IP…" />
         <LookupSelect
           ariaLabel="Filter by status"
@@ -160,26 +172,14 @@ export function OtpLogPage() {
           className="w-36 bg-card"
         />
         <DateRange from={range.from} to={range.to} onChange={(r) => filter(() => setRange(r))} />
-        {filtered && (
-          <Button
-            variant="ghost"
-            onClick={() =>
-              filter(() => {
-                list.onSearch("");
-                setStatus("");
-                setRange({ from: "", to: "" });
-              })
-            }
-          >
-            Clear
-          </Button>
-        )}
-      </div>
+      </ListToolbar>
 
       <DataTable
         columns={columns}
         rows={list.rows}
         rowKey={(o) => o.id}
+        sort={list.sort}
+        onSort={list.onSort}
         loading={list.isLoading}
         refreshing={list.isFetching && !list.isLoading}
         empty={

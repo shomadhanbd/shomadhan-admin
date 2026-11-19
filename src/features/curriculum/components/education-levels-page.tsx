@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { FormDialog } from "@/components/shared/form-dialog";
-import { EmptyState, Field, PageHeader, SearchInput } from "@/components/shared/page-shell";
+import { EmptyState, Field, ListToolbar, PageHeader, SearchInput } from "@/components/shared/page-shell";
 import { NameCell, SlugInput, actionsColumn, countColumn } from "./shared";
 import type { EducationLevel } from "@/features/curriculum/types";
 
@@ -80,25 +80,42 @@ export function EducationLevelsPage() {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<EducationLevel | null | "new">(null);
 
-  const { rows, isLoading, isFetching, search, onSearch, deleting, setDeleting, remove, pagination } =
-    useCrudList<EducationLevel>({
-      key: keys.all[0],
-      path: EDUCATION_LEVELS,
-      onDeleted: () => {
-        queryClient.invalidateQueries({ queryKey: keys.lookup });
-        toast.success("Education level deleted");
-      },
-    });
+  const {
+    rows,
+    isLoading,
+    isFetching,
+    search,
+    onSearch,
+    deleting,
+    setDeleting,
+    remove,
+    pagination,
+    total,
+    sort,
+    onSort,
+  } = useCrudList<EducationLevel>({
+    key: keys.all[0],
+    path: EDUCATION_LEVELS,
+    onDeleted: () => {
+      queryClient.invalidateQueries({ queryKey: keys.lookup });
+      toast.success("Education level deleted");
+    },
+  });
 
   const columns: Column<EducationLevel>[] = [
     { key: "name", header: "Level", cell: (l) => <NameCell name={l.name} /> },
+    { ...countColumn("students", "Students", (l) => l.student_count, "student_count"), secondary: false },
     countColumn("groups", "Groups", (l) => l.group_count),
-    countColumn("subjects", "Subjects", (l) => l.subject_count),
+    countColumn("subjects", "Subjects", (l) => l.subject_count, "subject_count"),
     countColumn("chapters", "Chapters", (l) => l.chapter_count),
-    countColumn("questions", "Questions", (l) => l.question_count),
+    countColumn("questions", "Questions", (l) => l.question_count, "question_count"),
     actionsColumn<EducationLevel>(setEditing, setDeleting),
   ];
 
+  const filtered = Boolean(search);
+  function clearFilters() {
+    onSearch("");
+  }
   const newButton = (size?: "lg") => (
     <Button size={size} onClick={() => setEditing("new")}>
       <Plus className="h-4 w-4" />
@@ -109,14 +126,20 @@ export function EducationLevelsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Education levels" description="The exam stages students prepare for">
-        <SearchInput value={search} onChange={onSearch} placeholder="Search levels…" />
         {newButton("lg")}
       </PageHeader>
+
+      <ListToolbar total={isLoading ? undefined : total} noun="levels" filtered={filtered} onClear={clearFilters}>
+        <SearchInput value={search} onChange={onSearch} placeholder="Search levels…" />
+      </ListToolbar>
 
       <DataTable
         columns={columns}
         rows={rows}
         rowKey={(l) => l.id}
+        sort={sort}
+        onSort={onSort}
+        onRowClick={setEditing}
         loading={isLoading}
         refreshing={isFetching && !isLoading}
         empty={
@@ -125,7 +148,7 @@ export function EducationLevelsPage() {
               icon={<GraduationCap className="h-5 w-5" />}
               title="No levels match this search"
               action={
-                <Button variant="outline" onClick={() => onSearch("")}>
+                <Button variant="outline" onClick={clearFilters}>
                   Clear search
                 </Button>
               }

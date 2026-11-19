@@ -23,6 +23,8 @@ interface CrudListOptions<T> {
   pageSize?: number;
   /** False holds the query back, e.g. until a required filter is chosen. */
   enabled?: boolean;
+  /** The API's `?ordering=` when the admin has not picked a column; empty for the server's own order. */
+  defaultSort?: string;
   /**
    * Keep the page, page size and search in the page's address (`?page=2&q=…`), so coming back
    * restores the list. False for a list inside a dialog, which must not touch the address.
@@ -40,11 +42,14 @@ export function useCrudList<T extends { id: number | string }>({
   pageSize: initialPageSize = 25,
   enabled = true,
   inUrl = true,
+  defaultSort = "",
 }: CrudListOptions<T>) {
   const queryClient = useQueryClient();
   const [page, setPage] = useUrlNumber("page", 1, inUrl);
   const [pageSize, setPageSize] = useUrlNumber("size", initialPageSize, inUrl);
   const [urlSearch, setUrlSearch] = useUrlState("q", "", inUrl);
+  // `-start_time` style, as DRF's `?ordering=` takes it.
+  const [sort, setSort] = useUrlState("sort", defaultSort, inUrl);
   // The box follows every keystroke; the address and the query only the settled text.
   const [search, setSearch] = useState(urlSearch);
   const debouncedSearch = useDebounce(search, 400);
@@ -57,9 +62,9 @@ export function useCrudList<T extends { id: number | string }>({
   }, [debouncedSearch]);
 
   const query = useQuery({
-    queryKey: [key, path, page, pageSize, debouncedSearch, params],
+    queryKey: [key, path, page, pageSize, debouncedSearch, sort, params],
     queryFn: async () => {
-      const query = cleanParams({ ...params, page, page_size: pageSize, search: debouncedSearch });
+      const query = cleanParams({ ...params, page, page_size: pageSize, search: debouncedSearch, ordering: sort });
       try {
         return (await api.get<Page<T>>(path, { params: query })).data;
       } catch (err) {
@@ -93,6 +98,15 @@ export function useCrudList<T extends { id: number | string }>({
     onSettled: () => setDeleting(null),
   });
 
+  /** A new order starts again from the first page. */
+  const onSort = useCallback(
+    (value: string) => {
+      setSort(value);
+      setPage(1);
+    },
+    [setSort, setPage],
+  );
+
   const onSearch = useCallback(
     (value: string) => {
       setSearch(value);
@@ -109,6 +123,8 @@ export function useCrudList<T extends { id: number | string }>({
     search,
     debouncedSearch,
     onSearch,
+    sort,
+    onSort,
     page,
     setPage,
     deleting,

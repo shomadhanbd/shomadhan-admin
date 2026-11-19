@@ -17,7 +17,7 @@ import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { FormDialog } from "@/components/shared/form-dialog";
 import { LookupSelect } from "@/components/shared/lookup-select";
-import { EmptyState, Field, PageHeader, SearchInput } from "@/components/shared/page-shell";
+import { EmptyState, Field, ListToolbar, PageHeader, SearchInput } from "@/components/shared/page-shell";
 import { RowActions } from "@/components/shared/row-actions";
 import type { Product } from "@/features/products/types";
 
@@ -186,15 +186,27 @@ export function ProductsPage() {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState<Product | null | "new">(null);
 
-  const { rows, isLoading, isFetching, search, onSearch, deleting, setDeleting, remove, pagination } =
-    useCrudList<Product>({
-      key: productKeys.all[0],
-      path: PRODUCTS,
-      onDeleted: () => {
-        queryClient.invalidateQueries({ queryKey: productKeys.lookup });
-        toast.success("Plan deleted");
-      },
-    });
+  const {
+    rows,
+    isLoading,
+    isFetching,
+    search,
+    onSearch,
+    deleting,
+    setDeleting,
+    remove,
+    pagination,
+    total,
+    sort,
+    onSort,
+  } = useCrudList<Product>({
+    key: productKeys.all[0],
+    path: PRODUCTS,
+    onDeleted: () => {
+      queryClient.invalidateQueries({ queryKey: productKeys.lookup });
+      toast.success("Plan deleted");
+    },
+  });
 
   const columns: Column<Product>[] = [
     {
@@ -211,6 +223,7 @@ export function ProductsPage() {
       key: "price",
       header: "Price",
       align: "right",
+      sortKey: "price",
       width: "130px",
       cell: (p) => (
         <div>
@@ -224,6 +237,7 @@ export function ProductsPage() {
     {
       key: "duration",
       header: "Length",
+      sortKey: "duration_months",
       width: "110px",
       cell: (p) => <span className="text-sm text-foreground">{months(p.duration_months)}</span>,
     },
@@ -231,6 +245,8 @@ export function ProductsPage() {
       key: "sales",
       header: "Sales",
       align: "right",
+      sortKey: "sales",
+      sortFirst: "desc",
       secondary: true,
       width: "90px",
       cell: (p) => <span className="text-sm text-muted-foreground">{p.sales}</span>,
@@ -269,6 +285,10 @@ export function ProductsPage() {
     },
   ];
 
+  const filtered = Boolean(search);
+  function clearFilters() {
+    onSearch("");
+  }
   const newButton = (size?: "lg") => (
     <Button size={size} onClick={() => setEditing("new")}>
       <Plus className="h-4 w-4" />
@@ -279,14 +299,20 @@ export function ProductsPage() {
   return (
     <div className="space-y-6">
       <PageHeader title="Plans" description="The VIP plans students can buy, in the order the app lists them">
-        <SearchInput value={search} onChange={onSearch} placeholder="Search plans…" />
         {newButton("lg")}
       </PageHeader>
+
+      <ListToolbar total={isLoading ? undefined : total} noun="plans" filtered={filtered} onClear={clearFilters}>
+        <SearchInput value={search} onChange={onSearch} placeholder="Search plans…" />
+      </ListToolbar>
 
       <DataTable
         columns={columns}
         rows={rows}
         rowKey={(p) => p.id}
+        sort={sort}
+        onSort={onSort}
+        onRowClick={setEditing}
         loading={isLoading}
         refreshing={isFetching && !isLoading}
         empty={
@@ -295,7 +321,7 @@ export function ProductsPage() {
               icon={<Package className="h-5 w-5" />}
               title="No plans match this search"
               action={
-                <Button variant="outline" onClick={() => onSearch("")}>
+                <Button variant="outline" onClick={clearFilters}>
                   Clear search
                 </Button>
               }

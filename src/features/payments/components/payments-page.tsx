@@ -3,19 +3,17 @@
 import Link from "next/link";
 import { CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { dateTime, money } from "@/lib/format";
+import { money } from "@/lib/format";
 import { APPLE_TRANSACTIONS, PAYMENTS, paymentKeys } from "@/features/payments/api";
 import { APPLE_STATUSES, PAYMENT_STATUSES, appleStatus, paymentStatus } from "@/features/payments/constants";
 import { useCrudList } from "@/hooks/use-crud-list";
 import { useUrlRange, useUrlState } from "@/hooks/use-url-state";
 import { Badge } from "@/components/ui/badge";
 import { PersonAvatar } from "@/components/shared/person-avatar";
-import { Button } from "@/components/ui/button";
 import { DataTable, Pagination, type Column } from "@/components/shared/data-table";
 import { DateRange } from "@/components/shared/date-range";
 import { LookupSelect } from "@/components/shared/lookup-select";
-import { EmptyState, PageHeader, SearchInput } from "@/components/shared/page-shell";
-import { RowActions } from "@/components/shared/row-actions";
+import { EmptyState, ListToolbar, PageHeader, SearchInput, TimeAgo } from "@/components/shared/page-shell";
 import type { AppleTransaction, Payment } from "@/features/payments/types";
 
 type Source = "sslcommerz" | "apple";
@@ -73,6 +71,8 @@ function SslcommerzTable({ list, filtered }: { list: List<Payment>; filtered: bo
       header: "Amount",
       align: "right",
       width: "120px",
+      sortKey: "amount",
+      sortFirst: "desc",
       cell: (p) => (
         <div>
           <p className="text-sm font-medium text-foreground">{money(p.amount)}</p>
@@ -90,19 +90,10 @@ function SslcommerzTable({ list, filtered }: { list: List<Payment>; filtered: bo
       key: "when",
       header: "When",
       secondary: true,
-      width: "170px",
-      cell: (p) => <span className="text-sm text-muted-foreground">{dateTime(p.created_at)}</span>,
-    },
-    {
-      key: "actions",
-      header: "",
-      align: "right",
-      width: "90px",
-      cell: (p) => (
-        <div className="flex justify-end">
-          <RowActions primary={{ label: "Open", href: `/billing/payments/${p.id}` }} actions={[]} />
-        </div>
-      ),
+      width: "140px",
+      sortKey: "created_at",
+      sortFirst: "desc",
+      cell: (p) => <TimeAgo value={p.created_at} className="text-muted-foreground" />,
     },
   ];
 
@@ -112,6 +103,9 @@ function SslcommerzTable({ list, filtered }: { list: List<Payment>; filtered: bo
         columns={columns}
         rows={list.rows}
         rowKey={(p) => p.id}
+        rowHref={(p) => `/billing/payments/${p.id}`}
+        sort={list.sort}
+        onSort={list.onSort}
         loading={list.isLoading}
         refreshing={list.isFetching && !list.isLoading}
         empty={
@@ -161,19 +155,10 @@ function AppleTable({ list, filtered }: { list: List<AppleTransaction>; filtered
       key: "when",
       header: "Bought",
       secondary: true,
-      width: "170px",
-      cell: (t) => <span className="text-sm text-muted-foreground">{dateTime(t.purchase_date)}</span>,
-    },
-    {
-      key: "actions",
-      header: "",
-      align: "right",
-      width: "90px",
-      cell: (t) => (
-        <div className="flex justify-end">
-          <RowActions primary={{ label: "Open", href: `/billing/payments/apple/${t.id}` }} actions={[]} />
-        </div>
-      ),
+      width: "140px",
+      sortKey: "purchase_date",
+      sortFirst: "desc",
+      cell: (t) => <TimeAgo value={t.purchase_date} className="text-muted-foreground" />,
     },
   ];
 
@@ -183,6 +168,9 @@ function AppleTable({ list, filtered }: { list: List<AppleTransaction>; filtered
         columns={columns}
         rows={list.rows}
         rowKey={(t) => t.id}
+        rowHref={(t) => `/billing/payments/apple/${t.id}`}
+        sort={list.sort}
+        onSort={list.onSort}
         loading={list.isLoading}
         refreshing={list.isFetching && !list.isLoading}
         empty={
@@ -253,7 +241,9 @@ export function PaymentsPage() {
               }}
               className={cn(
                 "h-8 rounded-[calc(var(--shape-sm)-2px)] px-3 text-sm transition-colors duration-(--duration-short)",
-                source === s.id ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+                source === s.id
+                  ? "bg-brand font-medium text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {s.name}
@@ -262,7 +252,18 @@ export function PaymentsPage() {
         </div>
       </PageHeader>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <ListToolbar
+        total={list.isLoading ? undefined : list.total}
+        noun={source === "apple" ? "purchases" : "payments"}
+        filtered={filtered}
+        onClear={() =>
+          filter(() => {
+            list.onSearch("");
+            setStatus("");
+            setRange({ from: "", to: "" });
+          })
+        }
+      >
         <SearchInput
           value={list.search}
           onChange={list.onSearch}
@@ -280,21 +281,7 @@ export function PaymentsPage() {
           className="w-36 bg-card"
         />
         <DateRange from={range.from} to={range.to} onChange={(r) => filter(() => setRange(r))} />
-        {filtered && (
-          <Button
-            variant="ghost"
-            onClick={() =>
-              filter(() => {
-                list.onSearch("");
-                setStatus("");
-                setRange({ from: "", to: "" });
-              })
-            }
-          >
-            Clear
-          </Button>
-        )}
-      </div>
+      </ListToolbar>
 
       {source === "sslcommerz" ? (
         <SslcommerzTable list={payments} filtered={filtered} />

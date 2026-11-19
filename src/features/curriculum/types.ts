@@ -7,6 +7,8 @@ export interface EducationLevel {
   chapter_count: number;
   block_count: number;
   question_count: number;
+  /** Students placed in it; staff are not counted. */
+  student_count: number;
 }
 
 export interface EducationLevelBody {
@@ -20,6 +22,7 @@ export interface AcademicGroup {
   slug: string;
   education_level: number;
   education_level_name: string;
+  student_count: number;
   subject_count: number;
   chapter_count: number;
   block_count: number;
@@ -39,6 +42,7 @@ export interface Batch {
   education_level: number;
   education_level_name: string;
   is_active: boolean;
+  student_count: number;
 }
 
 export interface BatchBody {
@@ -56,6 +60,7 @@ export interface Subject {
   education_level_name: string;
   academic_group: number;
   academic_group_name: string;
+  locked_chapter_count: number;
   chapter_count: number;
   block_count: number;
   question_count: number;
@@ -94,6 +99,9 @@ export interface Topic {
   slug: string;
   chapter: number;
   chapter_name: string;
+  chapter_number: number;
+  subject: number;
+  subject_name: string;
 }
 
 export interface TopicBody {

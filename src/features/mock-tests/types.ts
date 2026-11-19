@@ -16,6 +16,8 @@ export interface MockTest {
   question_count: number;
   /** Once any student has started the test, its paper can no longer change. */
   has_attempts: boolean;
+  /** Submitted or graded papers. */
+  attempt_count: number;
   time_limit_minutes: number;
   total_marks: string;
   has_negative_marking: boolean;

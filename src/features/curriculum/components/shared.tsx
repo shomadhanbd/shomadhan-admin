@@ -14,13 +14,21 @@ export function NameCell({ name }: { name: string }) {
 }
 
 /** A right-aligned count column. */
-export function countColumn<T>(key: string, header: string, value: (row: T) => number): Column<T> {
+export function countColumn<T>(
+  key: string,
+  header: string,
+  value: (row: T) => number,
+  /** The API's ordering field, when the column should sort (largest first). */
+  sortKey?: string,
+): Column<T> {
   return {
     key,
     header,
     align: "right",
     secondary: true,
     width: "110px",
+    sortKey,
+    sortFirst: "desc",
     cell: (row) => <span className="text-sm text-muted-foreground">{value(row).toLocaleString("en-US")}</span>,
   };
 }
