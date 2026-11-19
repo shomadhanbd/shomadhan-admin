@@ -242,7 +242,7 @@ export function PaymentsPage() {
               className={cn(
                 "h-8 rounded-[calc(var(--shape-sm)-2px)] px-3 text-sm transition-colors duration-(--duration-short)",
                 source === s.id
-                  ? "bg-brand font-medium text-primary-foreground shadow-sm"
+                  ? "bg-primary font-medium text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >

@@ -67,14 +67,8 @@ export function LoginPage() {
           {/* Brand half */}
           <div
             className="relative hidden flex-col justify-between overflow-hidden p-10 text-white lg:flex xl:p-12"
-            style={{
-              // The rail colour, blended toward the theme accent. Dark in
-              // every theme, so white type on it needs no per-theme check.
-              background:
-                "linear-gradient(150deg, var(--hero-from) 0%," +
-                " var(--hero-mid) 62%," +
-                " color-mix(in oklab, var(--hero-mid) 78%, var(--sidebar-primary)) 100%)",
-            }}
+            // The rail colour: dark in every theme, so white type on it needs no per-theme check.
+            style={{ background: "var(--sidebar)" }}
           >
             <CardDoodles />
 

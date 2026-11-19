@@ -174,8 +174,8 @@ export function AppSidebar({ onLogout }: { onLogout: () => void }) {
                         <SidebarMenuButton
                           render={<Link href={item.url} />}
                           isActive={current === item.url}
-                          // The active item takes the app's selected-pill gradient.
-                          className="h-10 gap-3 rounded-(--shape-sm) px-3 text-sm text-sidebar-foreground transition-colors duration-(--duration-short) hover:bg-sidebar-accent hover:text-white data-active:bg-brand data-active:font-semibold data-active:text-white data-active:shadow-[0_6px_16px_rgb(6_119_125/0.35)]"
+                          // The active item takes the app's selected-pill teal.
+                          className="h-10 gap-3 rounded-(--shape-sm) px-3 text-sm text-sidebar-foreground transition-colors duration-(--duration-short) hover:bg-sidebar-accent hover:text-white data-active:bg-primary data-active:font-semibold data-active:text-white"
                         >
                           <item.icon className="h-[18px] w-[18px] shrink-0" />
                           <span className="truncate">{item.title}</span>

@@ -187,7 +187,7 @@ export function DataTable<T>({
       </div>
       {/* A hairline at the foot rather than a spinner over the rows: the
           rows stay readable while the next page loads. */}
-      {refreshing && <div className="h-0.5 w-full animate-pulse bg-brand" />}
+      {refreshing && <div className="h-0.5 w-full animate-pulse bg-primary" />}
     </div>
   );
 }

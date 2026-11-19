@@ -62,29 +62,11 @@ export function Underline({ className = "" }: { className?: string }) {
   );
 }
 
-/** The sign-in backdrop, built from `--sidebar`: a base, two glows and a dot grid. */
+/** The sign-in backdrop: the rail colour with a faint dot grid. */
 export function Backdrop() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(155deg," +
-            " color-mix(in oklab, var(--sidebar) 88%, #000) 0%," +
-            " var(--sidebar) 46%," +
-            " color-mix(in oklab, var(--sidebar) 76%, var(--sidebar-primary)) 100%)",
-        }}
-      />
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(52rem 34rem at 14% 6%, var(--sidebar-primary) 0%, transparent 62%)," +
-            "radial-gradient(44rem 32rem at 88% 96%, var(--sidebar-primary) 0%, transparent 65%)",
-          opacity: 0.22,
-        }}
-      />
+      <div className="absolute inset-0" style={{ background: "var(--sidebar)" }} />
       <div
         className="absolute inset-0"
         style={{
@@ -162,7 +144,7 @@ export function EmptyDoodles() {
   );
 }
 
-/** The scatter on the dashboard hero, over its own gradient. */
+/** The scatter on the dashboard hero. */
 export function HeroDoodles() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">

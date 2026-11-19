@@ -8,8 +8,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         // The app's primary fill: teal deepening to the bottom-right, with a hairline of light on top.
-        default:
-          "bg-brand text-primary-foreground shadow-[0_1px_2px_rgb(12_42_44/0.18),inset_0_1px_0_rgb(255_255_255/0.14)] hover:brightness-110",
+        default: "bg-primary text-primary-foreground shadow-[0_1px_2px_rgb(12_42_44/0.18)] hover:bg-primary/90",
         outline:
           "border-border bg-card text-foreground shadow-xs hover:border-primary/30 hover:bg-accent hover:text-foreground aria-expanded:bg-accent aria-expanded:text-foreground",
         secondary:

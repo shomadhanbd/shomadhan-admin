@@ -67,7 +67,6 @@
   --color-success-surface: var(--success-surface);
   --color-warning-surface: var(--warning-surface);
   --color-primary-surface: var(--primary-surface);
-  --color-primary-deep: var(--primary-deep);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
@@ -107,8 +106,6 @@
   --popover: #ffffff;
   --popover-foreground: #0c2a2c;
   --primary: #06777d;
-  /* The far end of the app's selected-pill gradient: primary lerped 26% to black. */
-  --primary-deep: #055a5e;
   --primary-foreground: #ffffff;
   /* The app's colorPrimarySurface: soft fills behind teal text and icons. */
   --primary-surface: #dcf2f0;
@@ -132,8 +129,6 @@
   /* The app's card: hairline border plus a soft ink shadow (12px blur, 4px down). */
   --shadow-card: 0 4px 12px rgb(12 42 44 / 0.06);
   --shadow-raised: 0 10px 28px rgb(12 42 44 / 0.12);
-  /* Behind the page, as the app's header gradient fades into its body. */
-  --wash: #dff0ef;
 
   --chart-1: #06777d;
   --chart-2: #7c3aed;
@@ -185,12 +180,6 @@
   --tile-2: #2a78d6;
   --tile-3: #c98500;
   --tile-4: #7c3aed;
-
-  --hero-from: #0c2a2c;
-  --hero-mid: #0b4447;
-  --hero-to: #06777d;
-  --hero-line: #5eead4;
-  --hero-glow: #5eead4;
 }
 
 .dark {
@@ -201,7 +190,6 @@
   --popover: #152624;
   --popover-foreground: #e6f5f3;
   --primary: #0e9296;
-  --primary-deep: #0a6c6f;
   --primary-foreground: #ffffff;
   --primary-surface: #0c4a4d;
   --secondary: #182927;
@@ -223,7 +211,6 @@
   --ring: #2dd4bf;
   --shadow-card: 0 4px 14px rgb(0 0 0 / 0.35);
   --shadow-raised: 0 12px 32px rgb(0 0 0 / 0.5);
-  --wash: #0d2423;
 
   --chart-1: #22b3b8;
   --chart-2: #a78bfa;
@@ -254,12 +241,6 @@
   --tile-2: #5b9be8;
   --tile-3: #e0a52b;
   --tile-4: #a78bfa;
-
-  --hero-from: #061412;
-  --hero-mid: #0b3b3d;
-  --hero-to: #0e9296;
-  --hero-line: #5eead4;
-  --hero-glow: #5eead4;
 }
 
 /* The app's card in one class: hairline border and soft ink shadow on the card surface. */
@@ -269,20 +250,12 @@
   box-shadow: var(--shadow-card);
 }
 
-/* The app's selected-pill and primary-button fill: teal deepening to the bottom-right. */
-@utility bg-brand {
-  background-image: linear-gradient(135deg, var(--primary), var(--primary-deep));
-}
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
-    /* The app's backdrop: a teal wash at the top fading into the page. */
-    background-image: linear-gradient(to bottom, var(--wash), var(--background) 420px);
-    background-repeat: no-repeat;
   }
   html {
     @apply font-sans;
