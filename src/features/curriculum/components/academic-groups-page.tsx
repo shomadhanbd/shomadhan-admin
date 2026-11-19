@@ -69,15 +69,18 @@ function AcademicGroupDialog({
         save.mutate();
       }}
     >
-      <Field id="group-name" label="Name" required>
-        <Input
-          id="group-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Science"
-          autoFocus
-        />
-      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field id="group-name" label="Name" required>
+          <Input
+            id="group-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Science"
+            autoFocus
+          />
+        </Field>
+        <SlugInput id="group-slug" value={slug} onChange={setSlug} />
+      </div>
 
       <Field
         id="group-level"
@@ -95,8 +98,6 @@ function AcademicGroupDialog({
           className="w-full"
         />
       </Field>
-
-      <SlugInput id="group-slug" value={slug} onChange={setSlug} />
     </FormDialog>
   );
 }

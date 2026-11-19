@@ -84,14 +84,14 @@ export function LoginPage() {
                 <br />
                 <span className="relative inline-block">
                   One place.
-                  <Underline className="absolute -bottom-1.5 left-0 h-3 w-full text-(--sidebar-primary)" />
+                  <Underline className="absolute -bottom-1.5 left-0 h-3 w-full text-primary" />
                 </span>
               </h2>
 
               <ul className="space-y-3.5">
                 {HIGHLIGHTS.map(({ icon: Icon, label }) => (
                   <li key={label} className="flex items-center gap-3 text-sm">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-(--sidebar-primary) ring-1 ring-white/15">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white ring-1 ring-white/15">
                       <Icon className="h-4 w-4" />
                     </span>
                     <span className="text-white/85">{label}</span>

@@ -90,7 +90,7 @@ function CouponDialog({ coupon, onOpenChange }: { coupon: Coupon | null; onOpenC
         save.mutate();
       }}
     >
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <Field id="coupon-code" label="Code" required hint="Students can type it in any case.">
           <Input
             id="coupon-code"
@@ -101,18 +101,26 @@ function CouponDialog({ coupon, onOpenChange }: { coupon: Coupon | null; onOpenC
             autoFocus
           />
         </Field>
-        <Field
-          id="coupon-discount"
-          label="Discount (৳)"
-          required
-          hint="Taken off the plan's price; at least ৳10 must be left to pay."
-        >
+        <Field id="coupon-discount" label="Discount (৳)" required hint="At least ৳10 must be left to pay.">
           <Input
             id="coupon-discount"
             type="number"
             min={1}
             value={discount}
             onChange={(e) => setDiscount(e.target.value)}
+          />
+        </Field>
+        <Field
+          id="coupon-max-uses"
+          label="Use limit"
+          hint={coupon?.times_used ? `Used ${coupon.times_used} times so far. Blank: unlimited.` : "Blank: unlimited."}
+        >
+          <Input
+            id="coupon-max-uses"
+            type="number"
+            min={coupon?.times_used || 1}
+            value={maxUses}
+            onChange={(e) => setMaxUses(e.target.value)}
           />
         </Field>
       </div>
@@ -125,25 +133,6 @@ function CouponDialog({ coupon, onOpenChange }: { coupon: Coupon | null; onOpenC
           <Input id="coupon-until" type="datetime-local" value={until} onChange={(e) => setUntil(e.target.value)} />
         </Field>
       </div>
-
-      <Field
-        id="coupon-max-uses"
-        label="Use limit"
-        hint={
-          coupon?.times_used
-            ? `Used ${coupon.times_used} times so far. Blank: unlimited.`
-            : "Total purchases it can discount. Blank: unlimited."
-        }
-      >
-        <Input
-          id="coupon-max-uses"
-          type="number"
-          min={coupon?.times_used || 1}
-          value={maxUses}
-          onChange={(e) => setMaxUses(e.target.value)}
-          className="w-32"
-        />
-      </Field>
 
       <ChipSelect
         label="Plans"

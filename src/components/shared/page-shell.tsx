@@ -28,7 +28,7 @@ export function PageHeader({
           <Link
             href={backHref}
             aria-label="Back"
-            className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-(--shape-sm) surface text-muted-foreground shadow-none transition-colors hover:border-primary/30 hover:text-primary"
+            className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-(--shape-sm) surface text-muted-foreground shadow-none transition-colors hover:border-foreground/20 hover:text-primary"
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
@@ -143,10 +143,10 @@ export function EmptyState({
       <EmptyDoodles />
 
       {firstRun ? (
-        <Mascot className="relative mb-5 h-24 w-24 text-primary/40" />
+        <Mascot className="relative mb-5 h-24 w-24 text-muted-foreground/30" />
       ) : (
         icon && (
-          <span className="relative mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary-surface text-primary dark:text-accent-foreground">
+          <span className="relative mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary-surface text-primary">
             {icon}
           </span>
         )

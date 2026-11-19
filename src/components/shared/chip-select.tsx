@@ -30,7 +30,7 @@ export function ChipSelect({
                 onClick={() => onChange(active ? value.filter((id) => id !== option.id) : [...value, option.id])}
                 className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                   active
-                    ? "border-primary bg-primary/10 text-primary"
+                    ? "border-primary bg-primary-surface text-primary"
                     : "border-border text-muted-foreground hover:border-foreground/20"
                 }`}
               >

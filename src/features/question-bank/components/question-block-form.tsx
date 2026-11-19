@@ -23,7 +23,7 @@ import {
 import { useLeaveWarning } from "@/hooks/use-leave-warning";
 import { Button } from "@/components/ui/button";
 import { ChipSelect } from "@/components/shared/chip-select";
-import { FormSection } from "@/components/shared/form-sheet";
+import { FormSection } from "@/components/shared/form-section";
 import { LookupSelect } from "@/components/shared/lookup-select";
 import { Field } from "@/components/shared/page-shell";
 import { SaveBar } from "@/components/shared/save-bar";
@@ -187,7 +187,7 @@ export function QuestionBlockForm({
                           })
                         }
                         className={`rounded-(--shape-md) border p-3 text-left transition-colors ${
-                          active ? "border-primary bg-primary/5" : "border-border hover:border-foreground/20"
+                          active ? "border-primary bg-primary-surface" : "border-border hover:border-foreground/20"
                         }`}
                       >
                         <p className="text-sm font-medium text-foreground">{title}</p>

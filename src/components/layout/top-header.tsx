@@ -197,7 +197,7 @@ export function TopHeader({ onLogout }: { onLogout: () => void }) {
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-popover-foreground">{name}</p>
                 <p className="truncate text-xs text-muted-foreground">{user?.mobile ?? user?.email ?? ""}</p>
-                <span className="mt-1.5 inline-block rounded bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                <span className="mt-1.5 inline-block rounded bg-primary-surface px-1.5 py-0.5 text-[10px] font-medium text-primary">
                   Admin
                 </span>
               </div>

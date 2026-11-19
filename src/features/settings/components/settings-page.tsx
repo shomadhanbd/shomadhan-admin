@@ -41,7 +41,7 @@ export function SettingsPage() {
                 onClick={() => setMode(id)}
                 aria-pressed={active}
                 className={`flex items-center gap-3 rounded-xl border p-4 text-left transition-colors ${
-                  active ? "border-primary bg-primary/5" : "border-border hover:border-foreground/20"
+                  active ? "border-primary bg-primary-surface" : "border-border hover:border-foreground/20"
                 }`}
               >
                 <Icon className="h-5 w-5 shrink-0 text-muted-foreground" />

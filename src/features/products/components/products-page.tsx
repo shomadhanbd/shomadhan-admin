@@ -86,44 +86,41 @@ function ProductDialog({ product, onOpenChange }: { product: Product | null; onO
         save.mutate();
       }}
     >
-      <Field id="product-title" label="Title" required>
-        <Input
-          id="product-title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="e.g. VIP 6 months"
-          autoFocus
-        />
-      </Field>
-
-      <Field
-        id="product-code"
-        label="Code"
-        required
-        hint={
-          isEdit
-            ? "The app and the App Store refer to the plan by this code, so it cannot change."
-            : "e.g. vip_6_month. Fixed once saved."
-        }
-      >
-        <Input
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field id="product-title" label="Title" required>
+          <Input
+            id="product-title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g. VIP 6 months"
+            autoFocus
+          />
+        </Field>
+        <Field
           id="product-code"
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          disabled={isEdit}
-          className="font-mono"
-        />
-      </Field>
+          label="Code"
+          required
+          hint={
+            isEdit
+              ? "The app and the App Store refer to the plan by this code, so it cannot change."
+              : "e.g. vip_6_month. Fixed once saved."
+          }
+        >
+          <Input
+            id="product-code"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            disabled={isEdit}
+            className="font-mono"
+          />
+        </Field>
+      </div>
 
-      <Field id="product-description" label="Description">
-        <Input id="product-description" value={description} onChange={(e) => setDescription(e.target.value)} />
-      </Field>
-
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         <Field id="product-price" label="Price (৳)" required>
           <Input id="product-price" type="number" min={0} value={price} onChange={(e) => setPrice(e.target.value)} />
         </Field>
-        <Field id="product-base-price" label="Was (৳)" hint="Struck through beside the price.">
+        <Field id="product-base-price" label="Was (৳)" hint="Shown struck through.">
           <Input
             id="product-base-price"
             type="number"
@@ -142,9 +139,21 @@ function ProductDialog({ product, onOpenChange }: { product: Product | null; onO
             onChange={(e) => setDuration(e.target.value)}
           />
         </Field>
+        <Field id="product-sort" label="Order" hint="Lower first.">
+          <Input
+            id="product-sort"
+            type="number"
+            min={0}
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+          />
+        </Field>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field id="product-description" label="Description">
+          <Input id="product-description" value={description} onChange={(e) => setDescription(e.target.value)} />
+        </Field>
         <Field id="product-addon" label="Add-on" hint="Another plan offered alongside this one.">
           <LookupSelect
             id="product-addon"
@@ -154,16 +163,6 @@ function ProductDialog({ product, onOpenChange }: { product: Product | null; onO
             placeholder="None"
             allLabel="None"
             className="w-full"
-          />
-        </Field>
-        <Field id="product-sort" label="Order" hint="Lower first.">
-          <Input
-            id="product-sort"
-            type="number"
-            min={0}
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-            className="w-24"
           />
         </Field>
       </div>

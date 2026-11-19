@@ -25,7 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ChipSelect } from "@/components/shared/chip-select";
-import { FormSection } from "@/components/shared/form-sheet";
+import { FormSection } from "@/components/shared/form-section";
 import { Field } from "@/components/shared/page-shell";
 import { SaveBar } from "@/components/shared/save-bar";
 import { BlockPickerDialog } from "./block-picker-dialog";

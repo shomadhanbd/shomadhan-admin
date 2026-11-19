@@ -95,8 +95,12 @@ export function DataTable<T>({
   const router = useRouter();
   const clickable = Boolean(rowHref || onRowClick);
 
-  function openRow(row: T, e: React.MouseEvent) {
-    if ((e.target as Element).closest(OWN_CLICK)) return;
+  function openRow(row: T, e: React.MouseEvent<HTMLTableRowElement>) {
+    const target = e.target as Element;
+    // React bubbles clicks out of portals (menus, popovers), so only the row's own cells count.
+    if (!e.currentTarget.contains(target) || target.closest(OWN_CLICK)) return;
+    // Dragging to select text ends in a click; copying a value must not open the record.
+    if (window.getSelection()?.toString()) return;
     if (rowHref) {
       const href = rowHref(row);
       if (e.metaKey || e.ctrlKey) window.open(href, "_blank");
@@ -115,11 +119,11 @@ export function DataTable<T>({
                   key={c.key}
                   scope="col"
                   style={c.width ? { width: c.width } : undefined}
-                  className={[
+                  className={cn(
                     "text-xs font-semibold text-muted-foreground",
                     c.align === "right" ? "text-right" : "text-left",
-                    c.secondary ? "hidden sm:table-cell" : "",
-                  ].join(" ")}
+                    c.secondary && "hidden sm:table-cell",
+                  )}
                 >
                   {c.sortKey && onSort ? (
                     <SortHeader
@@ -137,15 +141,16 @@ export function DataTable<T>({
             </tr>
           </thead>
           <tbody
-            className={`divide-y divide-border transition-opacity duration-(--duration-short) ${
-              refreshing ? "opacity-60" : "opacity-100"
-            }`}
+            className={cn(
+              "divide-y divide-border transition-opacity duration-(--duration-short)",
+              refreshing && "opacity-60",
+            )}
           >
             {loading ? (
               Array.from({ length: 6 }).map((_, i) => (
                 <tr key={i}>
                   {columns.map((c) => (
-                    <td key={c.key} className={c.secondary ? "hidden sm:table-cell" : ""}>
+                    <td key={c.key} className={cn(c.secondary && "hidden sm:table-cell")}>
                       <Skeleton className="h-4 w-24" />
                     </td>
                   ))}
@@ -170,11 +175,11 @@ export function DataTable<T>({
                   {columns.map((c) => (
                     <td
                       key={c.key}
-                      className={[
+                      className={cn(
                         "align-middle",
-                        c.align === "right" ? "text-right tabular-nums" : "",
-                        c.secondary ? "hidden sm:table-cell" : "",
-                      ].join(" ")}
+                        c.align === "right" && "text-right tabular-nums",
+                        c.secondary && "hidden sm:table-cell",
+                      )}
                     >
                       {c.cell(row)}
                     </td>

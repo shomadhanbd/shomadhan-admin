@@ -64,15 +64,23 @@ function BatchDialog({ batch, onOpenChange }: { batch: Batch | null; onOpenChang
         save.mutate();
       }}
     >
-      <Field id="batch-name" label="Name" required>
-        <Input
-          id="batch-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. HSC 2026"
-          autoFocus
-        />
-      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field id="batch-name" label="Name" required>
+          <Input
+            id="batch-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. HSC 2026"
+            autoFocus
+          />
+        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <SlugInput id="batch-slug" value={slug} onChange={setSlug} />
+          <Field id="batch-active" label="Active" hint="Students can only pick an active batch.">
+            <Switch id="batch-active" checked={isActive} onCheckedChange={setIsActive} />
+          </Field>
+        </div>
+      </div>
 
       <Field id="batch-level" label="Education level" required>
         <LookupSelect
@@ -83,12 +91,6 @@ function BatchDialog({ batch, onOpenChange }: { batch: Batch | null; onOpenChang
           placeholder="Pick a level"
           className="w-full"
         />
-      </Field>
-
-      <SlugInput id="batch-slug" value={slug} onChange={setSlug} />
-
-      <Field id="batch-active" label="Active" hint="Students can only pick an active batch.">
-        <Switch id="batch-active" checked={isActive} onCheckedChange={setIsActive} />
       </Field>
     </FormDialog>
   );

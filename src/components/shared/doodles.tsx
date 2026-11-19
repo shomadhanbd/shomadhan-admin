@@ -143,15 +143,3 @@ export function EmptyDoodles() {
     </div>
   );
 }
-
-/** The scatter on the dashboard hero. */
-export function HeroDoodles() {
-  return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-      <Star className="absolute top-[14%] right-[22%] h-8 w-8 text-white/20" />
-      <Squiggle className="absolute top-[8%] right-[4%] h-5 w-28 text-white/15" />
-      <Circle className="absolute -top-12 right-[12%] h-32 w-32 text-white/[0.08]" />
-      <Spiral className="absolute right-[6%] bottom-[10%] h-12 w-12 text-white/10" />
-    </div>
-  );
-}

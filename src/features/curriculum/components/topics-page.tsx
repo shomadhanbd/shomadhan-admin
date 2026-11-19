@@ -112,17 +112,18 @@ function TopicDialog({
         </>
       )}
 
-      <Field id="topic-name" label="Name" required>
-        <Input
-          id="topic-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Newton's laws"
-          autoFocus={isEdit}
-        />
-      </Field>
-
-      <SlugInput id="topic-slug" value={slug} onChange={setSlug} />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field id="topic-name" label="Name" required>
+          <Input
+            id="topic-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Newton's laws"
+            autoFocus={isEdit}
+          />
+        </Field>
+        <SlugInput id="topic-slug" value={slug} onChange={setSlug} />
+      </div>
     </FormDialog>
   );
 }

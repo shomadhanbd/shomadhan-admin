@@ -113,7 +113,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
                   onMouseEnter={() => setActive(i)}
                   onClick={() => go(r)}
                   className={`flex w-full items-center gap-3 rounded-(--shape-sm) px-3 py-2 text-left transition-colors duration-(--duration-short) ${
-                    i === activeIndex ? "bg-primary/10 text-primary" : "text-foreground"
+                    i === activeIndex ? "bg-primary-surface text-primary" : "text-foreground"
                   }`}
                 >
                   <span className={i === activeIndex ? "text-primary" : "text-muted-foreground"}>{r.icon}</span>

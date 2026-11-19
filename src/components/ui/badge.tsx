@@ -9,7 +9,7 @@ const badgeVariants = cva(
     variants: {
       variant: {
         // Soft tinted pills, like the app's chips: colour carries the state, never a solid block.
-        default: "bg-primary-surface text-primary dark:text-accent-foreground [a]:hover:bg-primary-surface/80",
+        default: "bg-primary-surface text-primary [a]:hover:bg-primary-surface/80",
         secondary: "bg-muted text-foreground/80 [a]:hover:bg-muted/80",
         success: "bg-success-surface text-success",
         warning: "bg-warning-surface text-warning",

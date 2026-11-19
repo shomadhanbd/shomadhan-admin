@@ -25,20 +25,6 @@ export function dateTime(value: string | null | undefined): string {
     .toLowerCase()}`;
 }
 
-/** Whether a moment has already passed — drives "expired" styling. */
-export function isPast(value: string | null | undefined): boolean {
-  if (!value) return false;
-  const d = new Date(value);
-  return !Number.isNaN(d.getTime()) && d.getTime() < Date.now();
-}
-
-/** `subscription` -> `Subscription`, `valid_till` -> `Valid till`. */
-export function humanise(value: string | null | undefined): string {
-  if (!value) return "—";
-  const s = value.replace(/[_-]+/g, " ").trim();
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
-
 /** An `<input type="datetime-local">` wants exactly `YYYY-MM-DDTHH:mm`. */
 export function toLocalInput(value: string | null | undefined): string {
   if (!value) return "";

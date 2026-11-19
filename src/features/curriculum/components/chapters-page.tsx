@@ -18,7 +18,7 @@ import { FormDialog } from "@/components/shared/form-dialog";
 import { LookupSelect } from "@/components/shared/lookup-select";
 import { EmptyState, Field, ListToolbar, PageHeader, SearchInput } from "@/components/shared/page-shell";
 import { NameCell, SlugInput, actionsColumn, countColumn } from "./shared";
-import { useSetChapterAccess, useSetChapterLock } from "./access";
+import { useSetChapterAccess, useSetChapterLock } from "@/features/curriculum/hooks/use-chapter-access";
 import type { Chapter } from "@/features/curriculum/types";
 
 const CHAPTER_ACCESS = [
@@ -89,46 +89,47 @@ function ChapterDialog({
         save.mutate();
       }}
     >
-      <Field
-        id="chapter-subject"
-        label="Subject"
-        required
-        hint={isEdit ? "A chapter stays in the subject it was created in." : undefined}
-      >
-        <LookupSelect
+      <div className="grid gap-4 sm:grid-cols-[1fr_10rem]">
+        <Field
           id="chapter-subject"
-          value={subject}
-          onChange={setSubject}
-          options={subjects.data}
-          placeholder="Pick a subject"
-          disabled={isEdit}
-          className="w-full"
-        />
-      </Field>
+          label="Subject"
+          required
+          hint={isEdit ? "A chapter stays in the subject it was created in." : undefined}
+        >
+          <LookupSelect
+            id="chapter-subject"
+            value={subject}
+            onChange={setSubject}
+            options={subjects.data}
+            placeholder="Pick a subject"
+            disabled={isEdit}
+            className="w-full"
+          />
+        </Field>
+        <Field id="chapter-number" label="Chapter number" hint="Sets the order.">
+          <Input
+            id="chapter-number"
+            type="number"
+            min={0}
+            value={number}
+            onChange={(e) => setNumber(e.target.value)}
+            placeholder="e.g. 1"
+          />
+        </Field>
+      </div>
 
-      <Field id="chapter-name" label="Name" required>
-        <Input
-          id="chapter-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Motion"
-          autoFocus
-        />
-      </Field>
-
-      <Field id="chapter-number" label="Chapter number" hint="Chapters are listed in this order.">
-        <Input
-          id="chapter-number"
-          type="number"
-          min={0}
-          value={number}
-          onChange={(e) => setNumber(e.target.value)}
-          placeholder="e.g. 1"
-          className="w-28"
-        />
-      </Field>
-
-      <SlugInput id="chapter-slug" value={slug} onChange={setSlug} />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field id="chapter-name" label="Name" required>
+          <Input
+            id="chapter-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Motion"
+            autoFocus
+          />
+        </Field>
+        <SlugInput id="chapter-slug" value={slug} onChange={setSlug} />
+      </div>
 
       <Field id="chapter-locked" label="VIP only" hint="Free students see it with a lock and are asked to upgrade.">
         <Switch id="chapter-locked" checked={isLocked} onCheckedChange={setIsLocked} />

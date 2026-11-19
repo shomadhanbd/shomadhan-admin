@@ -62,16 +62,18 @@ function EducationLevelDialog({
         save.mutate();
       }}
     >
-      <Field id="level-name" label="Name" required>
-        <Input
-          id="level-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. HSC"
-          autoFocus
-        />
-      </Field>
-      <SlugInput id="level-slug" value={slug} onChange={setSlug} />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field id="level-name" label="Name" required>
+          <Input
+            id="level-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. HSC"
+            autoFocus
+          />
+        </Field>
+        <SlugInput id="level-slug" value={slug} onChange={setSlug} />
+      </div>
     </FormDialog>
   );
 }

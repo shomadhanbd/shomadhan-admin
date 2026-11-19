@@ -81,15 +81,18 @@ function SubjectDialog({ subject, onOpenChange }: { subject: Subject | null; onO
         save.mutate();
       }}
     >
-      <Field id="subject-name" label="Name" required>
-        <Input
-          id="subject-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Physics"
-          autoFocus
-        />
-      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field id="subject-name" label="Name" required>
+          <Input
+            id="subject-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Physics"
+            autoFocus
+          />
+        </Field>
+        <SlugInput id="subject-slug" value={slug} onChange={setSlug} />
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field id="subject-level" label="Education level" required>
@@ -119,8 +122,6 @@ function SubjectDialog({ subject, onOpenChange }: { subject: Subject | null; onO
           />
         </Field>
       </div>
-
-      <SlugInput id="subject-slug" value={slug} onChange={setSlug} />
     </FormDialog>
   );
 }

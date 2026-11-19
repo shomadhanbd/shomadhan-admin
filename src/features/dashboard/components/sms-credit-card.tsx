@@ -77,7 +77,7 @@ export function SmsCreditCard() {
           <span
             className={cn(
               "flex h-8 w-8 items-center justify-center rounded-(--shape-sm)",
-              alarming ? "bg-destructive text-white" : "bg-primary-surface text-primary dark:text-accent-foreground",
+              alarming ? "bg-destructive text-white" : "bg-primary-surface text-primary",
             )}
           >
             {level === "empty" ? (
