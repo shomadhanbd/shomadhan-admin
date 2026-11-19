@@ -17,5 +17,12 @@ export const APPLE_STATUSES: { id: AppleStatus; name: string; variant: Variant }
   { id: "REVOKED", name: "Revoked", variant: "outline" },
 ];
 
-export const paymentStatus = (id: PaymentStatus) => PAYMENT_STATUSES.find((s) => s.id === id)!;
-export const appleStatus = (id: AppleStatus) => APPLE_STATUSES.find((s) => s.id === id)!;
+/** A status from older records or a new gateway value still gets a badge, under its own name. */
+const unknown = (id: string) => ({
+  id,
+  name: id ? id.charAt(0) + id.slice(1).toLowerCase() : "Unknown",
+  variant: "outline" as const,
+});
+
+export const paymentStatus = (id: PaymentStatus) => PAYMENT_STATUSES.find((s) => s.id === id) ?? unknown(id);
+export const appleStatus = (id: AppleStatus) => APPLE_STATUSES.find((s) => s.id === id) ?? unknown(id);
