@@ -106,14 +106,19 @@ export function MockTestsPage() {
       width: "90px",
       sortKey: "attempt_count",
       sortFirst: "desc",
-      cell: (t) => (
-        <span
-          className={t.attempt_count ? "text-sm text-foreground" : "text-sm text-muted-foreground"}
-          title={`${t.attempt_count} submitted ${t.attempt_count === 1 ? "paper" : "papers"}`}
-        >
-          {t.attempt_count}
-        </span>
-      ),
+      cell: (t) =>
+        t.attempt_count ? (
+          // Straight to the students' results, skipping the test's own page.
+          <Link
+            href={`/mock-tests/${t.id}?tab=attempts`}
+            className="text-sm font-medium text-primary hover:underline"
+            title={`See the ${t.attempt_count} submitted ${t.attempt_count === 1 ? "paper" : "papers"}`}
+          >
+            {t.attempt_count}
+          </Link>
+        ) : (
+          <span className="text-sm text-muted-foreground">0</span>
+        ),
     },
     {
       // A labelled switch, not an icon: publishing changes what students see, so it must not be mistaken for "view".

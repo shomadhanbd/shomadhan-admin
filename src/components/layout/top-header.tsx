@@ -49,6 +49,7 @@ const WORDS: Record<string, string> = {
   new: "New",
   edit: "Edit",
   apple: "App Store",
+  attempts: "Attempts",
 };
 
 /** Breadcrumb from the path, with ids dropped. */

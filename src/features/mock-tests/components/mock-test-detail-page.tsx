@@ -9,6 +9,9 @@ import { useAcademicGroups, useEducationLevels, useSubjects } from "@/lib/lookup
 import { StatTile } from "@/features/dashboard/components/stat-tile";
 import { mockTestKeys, mockTestsApi } from "@/features/mock-tests/api";
 import { MOCK_TEST_STATUS_LABELS } from "@/features/mock-tests/constants";
+import { AttemptsTab, useAttemptSummary } from "@/features/attempts/components/attempts-tab";
+import { useUrlState } from "@/hooks/use-url-state";
+import { cn } from "@/lib/utils";
 import { BlockPreview } from "@/features/question-bank/components/block-preview";
 import { QUESTION_TYPE_LABELS } from "@/features/question-bank/constants";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +47,10 @@ function typeCounts(test: MockTestDetail): [string, number][] {
 /** One mock test on a page of its own: its numbers, settings and the whole paper with the answer key. */
 export function MockTestDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  // `?tab=attempts` opens the students' results; the paper is the default.
+  const [tab, setTab] = useUrlState("tab");
+  const summary = useAttemptSummary(Number(id));
+  const taken = summary.data ? summary.data.finished + summary.data.in_progress : null;
   const levels = useEducationLevels();
   const groups = useAcademicGroups();
   const subjects = useSubjects();
@@ -97,8 +104,10 @@ export function MockTestDetailPage({ params }: { params: Promise<{ id: string }>
         </Link>
       </PageHeader>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {/* Two to a row on a phone too, so the Paper and Attempts tabs are on the first screen. */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatTile
+          size="sm"
           label="Questions"
           value={test.question_count}
           context={`In ${test.block_count} ${test.block_count === 1 ? "block" : "blocks"}`}
@@ -106,6 +115,7 @@ export function MockTestDetailPage({ params }: { params: Promise<{ id: string }>
           accent={1}
         />
         <StatTile
+          size="sm"
           label="Total marks"
           value={Number(test.total_marks)}
           context={
@@ -117,6 +127,7 @@ export function MockTestDetailPage({ params }: { params: Promise<{ id: string }>
           accent={2}
         />
         <StatTile
+          size="sm"
           label="Time limit"
           value={test.time_limit_minutes}
           context="Minutes per attempt"
@@ -124,6 +135,7 @@ export function MockTestDetailPage({ params }: { params: Promise<{ id: string }>
           accent={3}
         />
         <StatTile
+          size="sm"
           label="Attempts allowed"
           value={test.max_attempts}
           context={test.has_attempts ? "Students have started attempting" : "No attempts yet"}
@@ -132,65 +144,99 @@ export function MockTestDetailPage({ params }: { params: Promise<{ id: string }>
         />
       </div>
 
-      {/* The paper is the wide column; the settings sit beside it once the screen has room. */}
-      <div className="grid items-start gap-4 xl:grid-cols-[1fr_360px]">
-        <DetailCard
-          title="Paper"
-          aside={
-            <div className="flex flex-wrap gap-1.5">
-              {typeCounts(test).map(([label, count]) => (
-                <Badge key={label} variant="secondary">
-                  {count} {label}
-                </Badge>
-              ))}
-            </div>
-          }
-        >
-          {test.blocks.length === 0 ? (
-            <EmptyState
-              icon={<ClipboardList className="h-5 w-5" />}
-              title="No questions on this test yet"
-              description="Add questions from the bank before publishing."
-              action={
-                <Link href={`/mock-tests/${test.id}/edit`} className={buttonClass({ variant: "outline" })}>
-                  Add questions
-                </Link>
-              }
-            />
-          ) : (
-            <ol className="divide-y divide-border">
-              {test.blocks.map((block, index) => (
-                <li key={block.id} className="py-4 first:pt-0 last:pb-0">
-                  <BlockPreview block={block} number={index + 1} />
-                </li>
-              ))}
-            </ol>
-          )}
-        </DetailCard>
-
-        <div className="space-y-4 xl:order-last">
-          <DetailCard title="Audience">
-            <dl className="divide-y divide-border">
-              <ViewRow label="Education levels">{names(test.applied_education_levels, levels.data)}</ViewRow>
-              <ViewRow label="Academic groups">{names(test.applied_academic_groups, groups.data)}</ViewRow>
-              <ViewRow label="Subjects">{names(test.applied_subjects, subjects.data)}</ViewRow>
-            </dl>
-          </DetailCard>
-          <DetailCard title="Schedule">
-            <dl className="divide-y divide-border">
-              <ViewRow label="Starts">{dateTime(test.start_time)}</ViewRow>
-              <ViewRow label="Ends">{dateTime(test.end_time)}</ViewRow>
-              <ViewRow label="Results published">{dateTime(test.result_publish_time)}</ViewRow>
-              <ViewRow label="Visibility">{test.is_published ? "Published" : "Not published"}</ViewRow>
-            </dl>
-          </DetailCard>
-          {test.description && (
-            <DetailCard title="Description">
-              <p className="text-sm text-foreground">{test.description}</p>
-            </DetailCard>
-          )}
-        </div>
+      <div role="tablist" aria-label="Mock test" className="flex gap-1 border-b border-border">
+        {(
+          [
+            ["", "Paper", null],
+            ["attempts", "Attempts", taken],
+          ] as const
+        ).map(([id, label, count]) => (
+          <button
+            key={label}
+            type="button"
+            role="tab"
+            aria-selected={tab === id}
+            onClick={() => setTab(id)}
+            className={cn(
+              "-mb-px flex items-center gap-2 border-b-2 px-3 pb-2.5 text-sm font-medium transition-colors duration-(--duration-short)",
+              tab === id
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {label}
+            {count !== null && count > 0 && (
+              <span className="rounded-full bg-primary-surface px-1.5 py-0.5 text-xs text-primary tabular-nums">
+                {count}
+              </span>
+            )}
+          </button>
+        ))}
       </div>
+
+      {tab === "attempts" ? (
+        <AttemptsTab mockTest={test.id} totalMarks={Number(test.total_marks)} />
+      ) : (
+        /* The paper is the wide column; the settings sit beside it once the screen has room. */
+        <div className="grid items-start gap-4 xl:grid-cols-[1fr_360px]">
+          <DetailCard
+            title="Paper"
+            aside={
+              <div className="flex flex-wrap gap-1.5">
+                {typeCounts(test).map(([label, count]) => (
+                  <Badge key={label} variant="secondary">
+                    {count} {label}
+                  </Badge>
+                ))}
+              </div>
+            }
+          >
+            {test.blocks.length === 0 ? (
+              <EmptyState
+                icon={<ClipboardList className="h-5 w-5" />}
+                title="No questions on this test yet"
+                description="Add questions from the bank before publishing."
+                action={
+                  <Link href={`/mock-tests/${test.id}/edit`} className={buttonClass({ variant: "outline" })}>
+                    Add questions
+                  </Link>
+                }
+              />
+            ) : (
+              <ol className="divide-y divide-border">
+                {test.blocks.map((block, index) => (
+                  <li key={block.id} className="py-4 first:pt-0 last:pb-0">
+                    <BlockPreview block={block} number={index + 1} />
+                  </li>
+                ))}
+              </ol>
+            )}
+          </DetailCard>
+
+          <div className="space-y-4 xl:order-last">
+            <DetailCard title="Audience">
+              <dl className="divide-y divide-border">
+                <ViewRow label="Education levels">{names(test.applied_education_levels, levels.data)}</ViewRow>
+                <ViewRow label="Academic groups">{names(test.applied_academic_groups, groups.data)}</ViewRow>
+                <ViewRow label="Subjects">{names(test.applied_subjects, subjects.data)}</ViewRow>
+              </dl>
+            </DetailCard>
+            <DetailCard title="Schedule">
+              <dl className="divide-y divide-border">
+                <ViewRow label="Starts">{dateTime(test.start_time)}</ViewRow>
+                <ViewRow label="Ends">{dateTime(test.end_time)}</ViewRow>
+                <ViewRow label="Results published">{dateTime(test.result_publish_time)}</ViewRow>
+                <ViewRow label="Visibility">{test.is_published ? "Published" : "Not published"}</ViewRow>
+              </dl>
+            </DetailCard>
+            {test.description && (
+              <DetailCard title="Description">
+                <p className="text-sm text-foreground">{test.description}</p>
+              </DetailCard>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

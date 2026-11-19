@@ -18,11 +18,12 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import {
+  BadgeCheck,
   BookMarked,
   BookOpen,
   ChevronDown,
+  ClipboardCheck,
   ClipboardList,
-  BadgeCheck,
   CreditCard,
   Flag,
   GraduationCap,
@@ -60,7 +61,10 @@ export const navGroups: { label: string; items: NavItem[] }[] = [
   },
   {
     label: "Exams",
-    items: [{ title: "Mock tests", url: "/mock-tests", icon: ClipboardList }],
+    items: [
+      { title: "Mock tests", url: "/mock-tests", icon: ClipboardList },
+      { title: "Results", url: "/results", icon: ClipboardCheck },
+    ],
   },
   {
     label: "People",
