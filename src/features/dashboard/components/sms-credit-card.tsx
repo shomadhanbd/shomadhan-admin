@@ -26,7 +26,7 @@ export function SmsCreditCard() {
   });
   const otp = useQuery({ queryKey: otpKeys.summary, queryFn: otpApi.summary, refetchInterval: 60_000 });
   const recheck = useMutation({
-    mutationFn: () => dashboardApi.smsBalance(true),
+    mutationFn: () => dashboardApi.smsBalance(),
     onSuccess: (data) => {
       queryClient.setQueryData(dashboardKeys.smsBalance, data);
       queryClient.invalidateQueries({ queryKey: otpKeys.summary });

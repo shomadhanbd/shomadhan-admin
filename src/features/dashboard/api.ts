@@ -10,7 +10,6 @@ export const dashboardKeys = {
 export const dashboardApi = {
   summary: async () => (await api.get<DashboardSummary>("/admin/dashboard/")).data,
   trends: async (range: TrendRange) => (await api.get<Trends>("/admin/dashboard/trends/", { params: { range } })).data,
-  /** Cached on the server for a minute; `refresh` asks BulkSMSBD again. */
-  smsBalance: async (refresh = false) =>
-    (await api.get<SmsBalance>("/admin/sms-balance/", { params: refresh ? { refresh: 1 } : {} })).data,
+  /** Asks BulkSMSBD each time. */
+  smsBalance: async () => (await api.get<SmsBalance>("/admin/sms-balance/")).data,
 };
